@@ -1,18 +1,51 @@
-import Head from 'next/head';
+import {Metadata} from 'next';
 import {fetchAllPosts} from '../../lib/api';
 import BlogSearch from '../../../components/BlogSearch';
 
+export const metadata: Metadata = {
+    title: '블로그 - ChangBeen Seo',
+    description:
+        '백엔드 개발, AWS, DevOps, 데이터베이스 최적화 등 실전 경험과 기술 인사이트를 공유합니다.',
+    keywords: [
+        'Node.js',
+        'TypeScript',
+        'AWS',
+        'PostgreSQL',
+        'Redis',
+        'Kubernetes',
+        '백엔드 개발',
+        'DevOps',
+        'SRE',
+    ],
+    openGraph: {
+        title: '블로그 - ChangBeen Seo',
+        description: '백엔드 개발, AWS, DevOps, 데이터베이스 최적화 등 실전 경험과 기술 인사이트',
+        url: 'https://blog.beenslab.com/blog',
+        siteName: 'Beenchangseo Blog',
+        locale: 'ko_KR',
+        type: 'website',
+        images: [
+            {
+                url: 'https://blog.beenslab.com/images/default-og.png',
+                width: 1200,
+                height: 630,
+                alt: 'Beenchangseo Blog',
+            },
+        ],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: '블로그 - ChangBeen Seo',
+        description: '백엔드 개발, AWS, DevOps, 데이터베이스 최적화 등 실전 경험과 기술 인사이트',
+        images: ['https://blog.beenslab.com/images/default-og.png'],
+        creator: '@beenchangseo',
+    },
+    alternates: {
+        canonical: 'https://blog.beenslab.com/blog',
+    },
+};
+
 export default async function Blog() {
     const posts = (await fetchAllPosts()).data;
-    return (
-        <>
-            <Head>
-                <meta property="og:title" content="Beenchang Seo Blog Main" />
-                <meta property="og:type" content="website" />
-                <meta property="og:description" content="학습과 경험을 기록하고 있습니다." />
-                <meta property="og:url" content="https://blog.beenslab.com/" />
-            </Head>
-            <BlogSearch posts={posts} />
-        </>
-    );
+    return <BlogSearch posts={posts} />;
 }

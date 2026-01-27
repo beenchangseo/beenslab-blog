@@ -5,10 +5,7 @@ import Image from 'next/image';
 import {Metadata} from 'next';
 import Script from 'next/script';
 
-export async function generateStaticParams() {
-    const posts = await fetchAllPosts();
-    return posts.data.map((post) => ({slug: post.slug}));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({params}: {params: {slug: string}}): Promise<Metadata> {
     const post = (await fetchPost(params.slug)).data;
@@ -23,13 +20,20 @@ export async function generateMetadata({params}: {params: {slug: string}}): Prom
             description: post.description,
             url,
             type: 'article',
-            images: ['/images/default-og.png'],
+            images: [
+                {url: 'https://blog.beenslab.com/images/default-og.png', width: 1200, height: 630},
+            ],
+            publishedTime: post.create_time,
+            modifiedTime: post.update_time,
+            authors: ['ChangBeen Seo'],
+            tags: post.tags,
         },
         twitter: {
             card: 'summary_large_image',
             title: post.title,
             description: post.description,
-            images: ['/images/default-og.png'],
+            images: ['https://blog.beenslab.com/images/default-og.png'],
+            creator: '@beenchangseo',
         },
         alternates: {
             canonical: url,
@@ -42,7 +46,31 @@ export default async function PostPage({params}: {params: {slug: string}}) {
     const post = (await fetchPost(params.slug)).data;
     const categories = (await fetchCategories()).data;
 
-    // JSON-LD(TechArticle)
+    const breadcrumbJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://blog.beenslab.com',
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Blog',
+                item: 'https://blog.beenslab.com/blog',
+            },
+            {
+                '@type': 'ListItem',
+                position: 3,
+                name: post.title,
+                item: `https://blog.beenslab.com/blog/post/${params.slug}`,
+            },
+        ],
+    };
+
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'TechArticle',
@@ -52,11 +80,25 @@ export default async function PostPage({params}: {params: {slug: string}}) {
         },
         headline: post.title,
         description: post.description,
-        author: {'@type': 'Person', name: 'beenchangseo'},
-        publisher: {'@type': 'Organization', name: 'beenslab'},
+        articleBody: post.contents.substring(0, 500),
+        keywords: post.tags.join(', '),
+        author: {
+            '@type': 'Person',
+            name: 'ChangBeen Seo',
+            url: 'https://blog.beenslab.com',
+        },
+        publisher: {
+            '@type': 'Organization',
+            name: 'beenslab',
+            url: 'https://blog.beenslab.com',
+            logo: {
+                '@type': 'ImageObject',
+                url: 'https://blog.beenslab.com/images/logo.png',
+            },
+        },
         datePublished: post.create_time,
         dateModified: post.update_time,
-        image:'/images/default-og.png',
+        image: 'https://blog.beenslab.com/images/default-og.png',
         inLanguage: 'ko',
     };
 
@@ -73,7 +115,11 @@ export default async function PostPage({params}: {params: {slug: string}}) {
 
     return (
         <>
-            {/* JSON-LD 주입 */}
+            <Script
+                id="breadcrumb-jsonld"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{__html: JSON.stringify(breadcrumbJsonLd)}}
+            />
             <Script
                 id="post-jsonld"
                 type="application/ld+json"
@@ -108,7 +154,7 @@ export default async function PostPage({params}: {params: {slug: string}}) {
                             <a href="#">
                                 <Image
                                     className="mb-0 mt-0"
-                                    src={`https://hits.beenslab.com/?domain=beenslab&post_id=1OCKAx8ts3oJamdb1ei5`}
+                                    src={`/api/blog/count?post_id=${params.slug}&domain=blog.beenslab.com`}
                                     alt="Hits"
                                     width={200}
                                     height={20}

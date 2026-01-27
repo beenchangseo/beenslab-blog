@@ -4,104 +4,124 @@ import Section from './Section';
 
 export default function PortfolioView() {
     return (
-        <div>
-            <Section
-                title="사이드 프로젝트"
-                subtitle=""
-            >
+        <div className="space-y-16">
+            <Section title="사이드 프로젝트" subtitle="개인 프로젝트 및 오픈소스 활동">
                 <div className="grid md:grid-cols-2 gap-6">
                     {PROJECTS.map((p, idx) => (
                         <article
                             key={idx}
-                            className="group rounded-2xl border p-5 bg-white dark:bg-gray-950 hover:shadow-md transition"
+                            className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 bg-white dark:bg-gray-800"
                         >
-                            <header className="flex items-start justify-between gap-2">
-                                <h3 className="text-lg font-semibold tracking-tight">{p.title}</h3>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <header className="flex items-start justify-between gap-3 mb-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                    {p.title}
+                                </h3>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded whitespace-nowrap">
                                     {p.period}
                                 </span>
                             </header>
-                            <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">
+
+                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
                                 {p.description}
                             </p>
-                            <div className="mt-3 flex flex-wrap gap-2">
+
+                            {p.highlights && p.highlights.length > 0 && (
+                                <ul className="mb-4 space-y-1">
+                                    {p.highlights.map((highlight, hIdx) => (
+                                        <li
+                                            key={hIdx}
+                                            className="text-sm text-gray-600 dark:text-gray-400 pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-gray-400"
+                                        >
+                                            {highlight}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            <div className="flex flex-wrap gap-2 mb-3">
                                 {p.stack.map((s) => (
                                     <Chip key={s}>{s}</Chip>
                                 ))}
                             </div>
-                            {p.links?.length ? (
-                                <div className="mt-3 flex flex-wrap gap-2">
+
+                            {p.links?.length > 0 && (
+                                <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
                                     {p.links.map((l) => (
                                         <a
                                             key={l.href}
                                             href={l.href}
-                                            className="text-sm underline underline-offset-4 decoration-dotted text-gray-800 dark:text-gray-100 hover:text-indigo-600"
+                                            className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
                                         >
                                             {l.label}
+                                            <span className="text-xs">↗</span>
                                         </a>
                                     ))}
                                 </div>
-                            ) : null}
+                            )}
                         </article>
                     ))}
                 </div>
             </Section>
 
-            <Section title="기술 블로그" subtitle="">
-                <ul className="space-y-3">
+            <Section title="기술 블로그" subtitle="주요 기술 포스트 및 문제 해결 사례">
+                <div className="space-y-3">
                     {POSTS.map((p) => (
-                        <li key={p.href} className="flex items-start gap-3">
-                            <span className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500" />
-                            <div>
-                                <a
-                                    href={p.href}
-                                    className="font-medium hover:underline underline-offset-4"
-                                >
-                                    {p.title}
-                                </a>
-                                {p.note && (
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        {p.note}
-                                    </p>
-                                )}
-                            </div>
-                        </li>
+                        <a
+                            key={p.href}
+                            href={p.href}
+                            className="block rounded-lg border border-gray-200 dark:border-gray-700 p-5 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600"
+                        >
+                            <h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">
+                                {p.title}
+                            </h3>
+                            {p.note && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{p.note}</p>
+                            )}
+                        </a>
                     ))}
-                </ul>
+                </div>
             </Section>
 
-            <Section title="보유 자격증" subtitle="">
-                <div className="grid md:grid-cols-2 gap-6">
-                    <ul className="space-y-3">
-                        {CERTS.map((c) => (
-                            <li key={`${c.name}-${c.issued}`} className="rounded-lg border p-5">
-                                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
-                                    <div>
-                                        <h3 className="text-base font-medium">{c.name}</h3>
-                                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                            {c.org}
-                                        </p>
-                                    </div>
-                                    <p className="mt-2 md:mt-0 text-xs text-zinc-600 dark:text-zinc-400">
-                                        {c.issued}
-                                        {c.expires ? ` — ${c.expires}` : ''}
+            <Section title="보유 자격증" subtitle="전문 자격 및 인증">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                    {CERTS.map((c, idx) => (
+                        <div
+                            key={`${c.name}-${c.issued}`}
+                            className={
+                                idx > 0
+                                    ? 'pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'
+                                    : ''
+                            }
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                                        {c.name}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {c.org}
                                     </p>
                                 </div>
-                                {c.credUrl ? (
-                                    <div className="mt-3">
-                                        <a
-                                            href={c.credUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-block rounded-md border px-3 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                                        >
-                                            인증 보기 ↗
-                                        </a>
-                                    </div>
-                                ) : null}
-                            </li>
-                        ))}
-                    </ul>
+                                <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                                    <p>{c.issued}</p>
+                                    {c.expires && <p>{c.expires}</p>}
+                                </div>
+                            </div>
+                            {c.credUrl && (
+                                <div className="mt-3">
+                                    <a
+                                        href={c.credUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                                    >
+                                        인증 보기
+                                        <span className="text-xs">↗</span>
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </Section>
         </div>

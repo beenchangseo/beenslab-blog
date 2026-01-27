@@ -1,0 +1,69 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto]
+}
+
+model User {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String   @unique
+  name           String
+  password       String
+  create_time    DateTime @default(now())
+  email_verified Boolean  @default(false)
+  Post           Post[]
+
+  @@map("user")
+}
+
+model OauthClient {
+  id                   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id            String @unique
+  client_secret        String
+  client_redirect_uris String
+
+  @@map("oauth_client")
+}
+
+model Category {
+  id      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  keyword String           @unique
+  title   String
+  posts   PostOnCategory[]
+
+  @@map("category")
+}
+
+model Post {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug           String?          @default("")
+  user_id        String           @db.Uuid
+  title          String           @unique
+  description    String
+  tags           String[]
+  contents       String
+  create_time    DateTime         @default(now())
+  update_time    DateTime         @default(now())
+  delete_time    DateTime?
+  user           User             @relation(fields: [user_id], references: [id])
+  PostOnCategory PostOnCategory[]
+
+  @@index([slug])
+  @@map("post")
+}
+
+model PostOnCategory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id     String   @db.Uuid
+  category_id String   @db.Uuid
+  category    Category @relation(fields: [category_id], references: [id])
+  post        Post     @relation(fields: [post_id], references: [id])
+
+  @@unique([post_id, category_id])
+  @@map("post_on_category")
+}

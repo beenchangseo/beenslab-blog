@@ -30,22 +30,38 @@ export type GetCategoryResponseDto = {
     keyword: string;
 };
 
+const getBaseUrl = () => {
+    if (typeof window !== 'undefined') {
+        return '';
+    }
+    return process.env.APP_URL || 'http://localhost:7777';
+};
+
 export async function fetchPost(slug: string): Promise<GenericResponse<GetBlogPostResponseDto>> {
-    const res = await fetch(`${process.env.BACKEND_API_SERVER}/blog/post?slug=${slug}`);
+    const baseUrl = getBaseUrl();
+    const res = await fetch(`${baseUrl}/api/blog/posts/${slug}`, {
+        cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch post');
 
     return res.json();
 }
 
 export async function fetchAllPosts(): Promise<GenericResponse<GetAllBlogPostResponseDto[]>> {
-    const res = await fetch(`${process.env.BACKEND_API_SERVER}/blog/post/list`);
+    const baseUrl = getBaseUrl();
+    const res = await fetch(`${baseUrl}/api/blog/posts`, {
+        cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch posts');
 
     return res.json();
 }
 
 export async function fetchCategories(): Promise<GenericResponse<GetCategoryResponseDto[]>> {
-    const res = await fetch(`${process.env.BACKEND_API_SERVER}/category/list`);
+    const baseUrl = getBaseUrl();
+    const res = await fetch(`${baseUrl}/api/categories`, {
+        cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch categories');
 
     return res.json();

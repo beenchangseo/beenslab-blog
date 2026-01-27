@@ -3,14 +3,14 @@
 import {useEffect, useRef, useState} from 'react';
 import Nav from './Nav';
 import Link from 'next/link';
-import {useSession, signOut} from 'next-auth/react';
 import {useRouter} from 'next/navigation';
 import dynamic from 'next/dynamic';
+import {logout} from '@/app/actions/auth';
 
 const DarkModeButton = dynamic(() => import('../mode/DarkMode'), {ssr: false});
 
 export default function Header() {
-    const {data: session} = useSession();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const headerRef = useRef<HTMLElement>(null);
     const toggleRef = useRef<HTMLDivElement>(null);
@@ -36,8 +36,23 @@ export default function Header() {
     };
 
     const handleLogin = () => {
-        router.push('/admin');
+        router.push('/admin/signin');
     };
+
+    const handleLogout = async () => {
+        setIsLoggedIn(false);
+        await logout();
+        router.push('/');
+        router.refresh();
+    };
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const response = await fetch('/api/auth/session');
+            setIsLoggedIn(response.ok);
+        };
+        checkAuth();
+    }, []);
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
@@ -78,11 +93,9 @@ export default function Header() {
                             <Nav type="normal" />
                             <button
                                 className="ml-10 text-xs"
-                                onClick={() =>
-                                    session ? signOut({redirectTo: '/'}) : handleLogin()
-                                }
+                                onClick={isLoggedIn ? handleLogout : handleLogin}
                             >
-                                {session ? 'Logout' : 'Login'}
+                                {isLoggedIn ? 'Logout' : 'Login'}
                             </button>
                         </div>
                     </div>

@@ -2,7 +2,7 @@
 
 import MDEditor from '@uiw/react-md-editor';
 import {useState, useEffect} from 'react';
-import {createPost} from '@/app/actions/posts';
+import {updatePost} from '@/app/actions/posts';
 import {useRouter} from 'next/navigation';
 
 interface Category {
@@ -11,17 +11,29 @@ interface Category {
     title: string;
 }
 
-export default function BoardEditorPage() {
+interface Post {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    tags: string[];
+    contents: string;
+    categories: string[];
+}
+
+export default function EditPostPage({params}: {params: {slug: string}}) {
     const router = useRouter();
     const [userId, setUserId] = useState<string | null>(null);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [postId, setPostId] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [tags, setTags] = useState('');
     const [content, setContent] = useState('');
-    const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -39,14 +51,11 @@ export default function BoardEditorPage() {
     }, [router]);
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/admin/signin');
+        if (!isCheckingAuth && userId) {
+            fetchCategories();
+            fetchPost();
         }
-    }, [status, router]);
-
-    useEffect(() => {
-        fetchCategories();
-    }, []);
+    }, [isCheckingAuth, userId]);
 
     async function fetchCategories() {
         try {
@@ -61,6 +70,44 @@ export default function BoardEditorPage() {
         }
     }
 
+    async function fetchPost() {
+        try {
+            const response = await fetch(`/api/blog/posts/${params.slug}`);
+            const result = await response.json();
+
+            if (result.data) {
+                const post: Post = result.data;
+                setPostId(post.id);
+                setTitle(post.title);
+                setDescription(post.description);
+                setTags(post.tags.join(', '));
+                setContent(post.contents);
+
+                const categoriesResponse = await fetch('/api/categories');
+                const categoriesResult = await categoriesResponse.json();
+
+                if (categoriesResult.data) {
+                    const categoryKeywordToId: Record<string, string> = {};
+                    categoriesResult.data.forEach((cat: Category) => {
+                        categoryKeywordToId[cat.keyword] = cat.id;
+                    });
+
+                    const categoryIds = post.categories
+                        .map((keyword) => categoryKeywordToId[keyword])
+                        .filter(Boolean);
+                    setSelectedCategoryIds(categoryIds);
+                }
+            } else {
+                setError('포스트를 찾을 수 없습니다.');
+            }
+        } catch (err) {
+            console.error('Failed to fetch post:', err);
+            setError('포스트를 불러오는데 실패했습니다.');
+        } finally {
+            setIsFetching(false);
+        }
+    }
+
     function toggleCategory(categoryId: string) {
         setSelectedCategoryIds((prev) =>
             prev.includes(categoryId)
@@ -69,7 +116,7 @@ export default function BoardEditorPage() {
         );
     }
 
-    async function handlePublish() {
+    async function handleUpdate() {
         if (!title.trim()) {
             setError('제목을 입력해주세요.');
             return;
@@ -105,7 +152,8 @@ export default function BoardEditorPage() {
                 .map((tag) => tag.trim())
                 .filter((tag) => tag.length > 0);
 
-            const result = await createPost({
+            const result = await updatePost({
+                postId,
                 title,
                 description,
                 contents: content,
@@ -115,23 +163,25 @@ export default function BoardEditorPage() {
             });
 
             if (result.success && result.data) {
-                alert('게시글이 성공적으로 게시되었습니다!');
+                alert('게시글이 성공적으로 수정되었습니다!');
                 router.push(`/blog/post/${result.data.slug}`);
             } else {
-                setError(result.error || '게시글 작성에 실패했습니다.');
+                setError(result.error || '게시글 수정에 실패했습니다.');
             }
         } catch (err) {
-            console.error('Publish error:', err);
-            setError('게시글 작성 중 오류가 발생했습니다.');
+            console.error('Update error:', err);
+            setError('게시글 수정 중 오류가 발생했습니다.');
         } finally {
             setIsLoading(false);
         }
     }
 
-    if (isCheckingAuth) {
+    if (isCheckingAuth || isFetching) {
         return (
             <div className="max-w-4xl mx-auto">
-                <div className="text-center py-10">로딩 중...</div>
+                <div className="text-center py-10">
+                    {isCheckingAuth ? '로딩 중...' : '포스트를 불러오는 중...'}
+                </div>
             </div>
         );
     }
@@ -142,7 +192,7 @@ export default function BoardEditorPage() {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">게시글 작성</h1>
+            <h1 className="text-3xl font-bold mb-6">게시글 수정</h1>
 
             {error && (
                 <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -210,11 +260,11 @@ export default function BoardEditorPage() {
 
             <div className="flex gap-4">
                 <button
-                    onClick={handlePublish}
+                    onClick={handleUpdate}
                     disabled={isLoading}
                     className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                    {isLoading ? '게시 중...' : '게시'}
+                    {isLoading ? '수정 중...' : '수정'}
                 </button>
                 <button
                     onClick={() => router.back()}

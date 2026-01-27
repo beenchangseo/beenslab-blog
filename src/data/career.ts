@@ -5,6 +5,13 @@ type Summary = {
     title: string;
     blurb: string;
     highlights: string[];
+    contact: {
+        email: string;
+        phone: string;
+        github: string;
+        blog: string;
+        location: string;
+    };
 };
 
 type Experience = {
@@ -13,6 +20,7 @@ type Experience = {
     period: string;
     summary: string;
     achievements: string[];
+    keyMetrics?: string[];
 };
 
 type Project = {
@@ -21,6 +29,7 @@ type Project = {
     description: string;
     stack: string[];
     links: {label: string; href: string}[];
+    highlights?: string[];
 };
 
 type Post = {
@@ -43,149 +52,224 @@ type Cert = {
     credUrl?: string;
 };
 
+type Education = {
+    school: string;
+    degree: string;
+    period: string;
+};
+
+type Achievement = {
+    metric: string;
+    description: string;
+    icon: string;
+};
+
 export const SUMMARY: Summary = {
     name: '서창빈',
-    title: 'Node.js 기반 백엔드 개발자',
-    blurb: '글로벌 가상자산 거래소 Probit 에서 백엔드 시스템 개발을 담당하고 있습니다.',
+    title: '7년차 백엔드 엔지니어 · SRE',
+    blurb: '깊이 있는 최적화와 DevOps 역량을 겸비한 백엔드 엔지니어입니다. Node.js, TypeScript를 주력으로 활용하여 고성능·고가용성 시스템을 구축해 왔으며, 누적 회원수 250만의 글로벌 가상자산 거래소에서 트레이딩 플랫폼 백엔드 개발 및 SRE 업무를 담당하고 있습니다.',
     highlights: [
-        '모놀리식 → MSA 전환 및 배포 안정화',
-        '분당 2만+ 알림 처리 푸시 서버 설계',
-        '거래/정산/펌뱅킹 등 금융 백엔드 도메인',
-        'RDS 최적화 및 대용량 처리',
+        '24,000배 쿼리 성능 개선',
+        '연간 $82,000 비용 절감',
+        '70% 빌드 시간 단축',
+        '분당 20,000건 푸시 처리',
     ],
+    contact: {
+        email: 'beenchangseo@gmail.com',
+        phone: '010-4075-1343',
+        github: 'https://github.com/beenchangseo',
+        blog: 'https://blog.beenslab.com',
+        location: '서울 강남구',
+    },
 };
+
+export const KEY_ACHIEVEMENTS: Achievement[] = [
+    {
+        metric: '24,000배',
+        description: '쿼리 성능 개선 (958ms → 0.04ms)',
+        icon: '🚀',
+    },
+    {
+        metric: '$82,000',
+        description: '연간 클라우드 비용 절감',
+        icon: '💰',
+    },
+    {
+        metric: '70%',
+        description: 'CI/CD 빌드 시간 단축',
+        icon: '⚡',
+    },
+    {
+        metric: '80억원',
+        description: 'ITS 시스템 매출 기여',
+        icon: '📈',
+    },
+];
 
 export const EXPERIENCES: Experience[] = [
     {
-        company: '디앤에스에버',
+        company: '디앤에스에버 (Probit Global)',
         role: 'SRE · 백엔드 엔지니어',
-        period: '2023.12 – 재직중',
-        summary: '가상 자산 거래소 Probit Global의 거래소 서비스 백엔드 개발',
+        period: '2023.12 – 현재',
+        summary:
+            '250만 유저가 사용하는 글로벌 가상자산 거래소 Probit Global의 백엔드 개발 및 SRE 업무',
         achievements: [
-            'SRE 업무 담당',
-            'RDS 슬로우 쿼리 튜닝 및 최적화',
-            'P2P 거래 시스템 개발',
-            '수수료 없는 내부이체 시스템 개발',
-            '처리율 제한 장치 개선',
+            '24,000배 쿼리 성능 개선으로 입금 지연 해소 (958ms → 0.04ms)',
+            '연간 $82,000 클라우드 비용 절감 (S3 아카이빙, Graviton 도입 등)',
+            'Rate Limiter 개선으로 RTT 속도 10배 향상 (30~40ms → 3~10ms)',
+            'CI/CD 파이프라인 고도화로 빌드 시간 70% 단축',
+            '900+ 마켓 실시간 가격 알림 서비스 개발 (2vCPU/2GB 환경 최적화)',
+            'Distroless 기반 거래엔진 컨테이너화로 보안 강화',
+            'Playwright E2E 자동화로 QA 생산성 향상',
+            'AWS Rekognition 기반 자체 KYC 시스템 개발',
         ],
+        keyMetrics: ['250만 유저', '일 50만건 거래', '$82K 절감', '24,000배 개선'],
     },
     {
-        company: '오션스',
+        company: '오션스 (Probit Korea)',
         role: '백엔드 엔지니어',
         period: '2022.09 – 2023.11',
-        summary: '가상 자산 거래소 Probit Korea의 거래소 서비스 백엔드 개발',
+        summary: '국내 가상자산 거래소의 원화 입출금 및 코어 백엔드 시스템 담당',
         achievements: [
-            '대용량 푸시 서버 구축',
-            'QR 로그인/2FA, 보이스 ARS 인증 도입',
-            '펌뱅킹 KRW 입출금 통신 모듈 개발',
-            '자금세탁방지(AML) 백오피스 개발',
+            'AWS SQS 기반 분당 20,000건 처리 대용량 푸시 서버 구축',
+            '토스 펌뱅킹 통신 SDK 자체 개발 (입금 오류 Zero 달성)',
+            'WebSocket 기반 MFA 전환으로 HTTP 요청 90% 감소',
+            'AML 백오피스 시스템 자체 개발로 외부 솔루션 비용 절감',
+            'QR 로그인 + 2차 인증으로 세션 탈취 방어',
         ],
+        keyMetrics: ['분당 20K 푸시', '90% 요청 감소', '입금 오류 Zero'],
     },
     {
         company: '동부아이씨티',
         role: '백엔드 엔지니어',
         period: '2019.03 – 2022.06',
-        summary: 'ITS(Intelligent Transport Systems 지능형 교통 체계) 개발 및 유지보수',
+        summary: '지능형 교통 관제시스템(ITS) 개발 및 10개 도시 약 300개소 시스템 구축',
         achievements: [
-            '도로교통 관제/신호제어 서버 개발',
-            '열화상 카메라 교차로 좌회전 검지기 통신 모듈 개발',
-            'CI/CD 자동화 도입, 운영 안정화',
+            'Kafka 기반 대규모 교차로 신호 데이터 분산 처리 아키텍처 설계',
+            'YOLO 모델 기반 열화상 카메라 좌회전 감응 시스템 개발',
+            '교통 신호 제어기 TCP Socket 통신 모듈 개발',
+            'IoT 와치독 시스템으로 선제적 장애 대응 체계 구축',
+            '3년간 80억원 매출 발생에 핵심 기여',
         ],
+        keyMetrics: ['10개 도시', '300개소', '80억원 매출'],
     },
 ];
 
 export const PROJECTS: Project[] = [
     {
-        title: 'android-iphone-media-migrator',
-        period: '2025',
+        title: '공감일기 앱',
+        period: '진행 중',
         description:
-            '안드로이드 기기에서 아이폰으로 사진/동영상을 마이그레이션 할 때 메타데이터를 자동으로 보정하는 Node.js 도구',
-        stack: ['Node.js', 'ADB'],
-        links: [
-            {
-                label: '블로그: 안드로이드 → 아이폰 사진/동영상 메타데이터 보정 마이그레이션하기',
-                href: '/blog/post/android-to-iphone-photo-metadata-fix',
-            },
+            '감정을 공유하고 비슷한 마음을 가진 사람들과 연결되는 플랫폼. 프로젝트 리드 및 백엔드/인프라 전체 담당',
+        stack: ['NestJS', 'PostgreSQL', 'Redis', 'Oracle Cloud', 'Jenkins', 'Docker', 'Portainer'],
+        links: [],
+        highlights: [
+            'Jenkins + GitHub Webhook 자동 배포',
+            'Docker Registry 자체 구축',
+            'Nginx + Certbot SSL 자동화',
+            'AI 감정 분석 시스템',
         ],
     },
     {
-        title: 'beenslab-hitmark',
+        title: '개인 기술 블로그',
+        period: '2024 – 현재',
+        description: 'Next.js 기반 기술 블로그. SSR/ISR로 SEO 최적화 및 성능 극대화',
+        stack: ['Next.js', 'NestJS', 'Vercel', 'OAuth'],
+        links: [{label: 'blog.beenslab.com', href: 'https://blog.beenslab.com'}],
+    },
+    {
+        title: 'Hitmark',
         period: '2025',
         description:
-            '블로그/페이지 조회수 카운터 – AWS Lambda + API Gateway + Firebase Firestore로 SVG 뱃지 제공',
-        stack: ['TypeScript', 'AWS', 'Firebase'],
+            '서버리스 기반 블로그 조회수 카운터. Lambda + API Gateway + Firebase로 SVG 배지 제공',
+        stack: ['TypeScript', 'AWS Lambda', 'API Gateway', 'Firebase'],
         links: [
             {
-                label: '블로그: 블로그 방문자 수, 직접 카운팅 시스템 구축기',
+                label: '블로그 포스트',
                 href: '/blog/post/blog-visitor-counter-build',
             },
         ],
     },
     {
-        title: 'create-oauth-app',
-        period: '2024',
-        description: 'OAuth 2.0 인증 서버 스타터 키트(NestJS/Prisma/Redis, 세션 기반 인증)',
-        stack: ['NestJS', 'Prisma', 'RDS/Redis'],
-        links: [],
+        title: 'Android to iPhone Media Migrator',
+        period: '2025',
+        description: '안드로이드→아이폰 사진/동영상 메타데이터 자동 보정 도구',
+        stack: ['Node.js', 'ADB'],
+        links: [
+            {
+                label: '블로그 포스트',
+                href: '/blog/post/android-to-iphone-photo-metadata-fix',
+            },
+        ],
     },
     {
-        title: 'beenchangseo.github.io',
-        period: '2024',
-        description: 'GitHub Pages 블로그에서 출발하여 Next.js로 마이그레이션한 블로그 프로젝트',
-        stack: ['Next.js', 'Github Actions', 'Vercel'],
-        links: [],
-    },
-    {
-        title: 'hangle-to-romanized',
+        title: 'Hangle to Romanized',
         period: '2023',
-        description: '한글 인명 로마자 변환기',
-        stack: ['Node.js'],
+        description:
+            '한글 표준 발음법과 로마자 표기법을 준수한 오픈소스 라이브러리. 외부 의존성 Zero',
+        stack: ['TypeScript', 'Jest', 'NPM'],
         links: [],
+        highlights: ['비음화/유음화/구개음화 등 음운 변화 구현', 'NPM 배포'],
     },
     {
-        title: 'sqs-provider',
-        period: '2023',
-        description: 'AWS SQS를 간편히 쓰기 위한 커스텀 라이브러리 (npm publish)',
-        stack: ['Node.js', 'AWS SQS', 'npm'],
+        title: '마이마켓플레이스',
+        period: '2019',
+        description: '우리동네 쿠폰적립/맛집 추천 앱. 웹 크롤링 및 GIS 위치 기반 최적화',
+        stack: ['Python', 'GIS', 'Crawling'],
         links: [],
+        highlights: ['120만건 데이터 수집', 'GIS 쿼리 속도 개선'],
     },
 ];
 
 export const POSTS: Post[] = [
     {
-        title: 'Node.js 이벤트 리스너 안의 비동기 함수, 어디까지 안전할까? (EventEmitter with async)',
+        title: 'Node.js 이벤트 리스너 안의 비동기 함수, 어디까지 안전할까?',
         href: '/blog/post/node-event-emitter-async',
-        note: '실운영 “빈 객체 전송” 이슈를 계기로 이벤트 기반 동기/비동기 처리 원칙 정리',
+        note: '실운영 "빈 객체 전송" 이슈 해결 사례',
     },
     {
-        title: '비동기 처리는 언제 해야 할까? - Transactional Outbox 패턴으로 메시지 유실 방지하기',
+        title: '비동기 처리는 언제 해야 할까? - Transactional Outbox 패턴',
         href: '/blog/post/transactional-outbox-async-pattern',
-        note: 'Outbox 패턴, 멱등·재시도·복구 전략까지 실전 코드로 설명',
+        note: 'Outbox 패턴으로 메시지 유실 방지',
     },
     {
-        title: 'PostgreSQL Read-Only 레플리카에서 데이터가 바로 안 보이는 이유 + 직접 실험해보기',
+        title: 'PostgreSQL Read-Only 레플리카에서 데이터가 바로 안 보이는 이유',
         href: '/blog/post/postgresql-read-replica',
-        note: 'Streaming Replication 지연을 실험으로 재현하고 운영 가이드 정리',
+        note: 'Streaming Replication 지연 실험 및 운영 가이드',
     },
     {
         title: '블로그 방문자 수, 직접 카운팅 시스템 구축기',
         href: '/blog/post/blog-visitor-counter-build',
-        note: 'AWS Lambda + Firebase + SVG로 방문자 카운팅 시스템 직접 구축',
+        note: 'AWS Lambda + Firebase + SVG 방문자 카운팅',
     },
 ];
 
 export const SKILLS: Skills[] = [
     {
-        cat: 'Languages',
-        items: ['TypeScript', 'Node.js', 'Java', 'SQL', 'Python', 'C++'],
+        cat: 'Backend',
+        items: ['Node.js', 'TypeScript', 'NestJS', 'Express', 'Java', 'Spring Boot', 'Python'],
     },
     {
-        cat: 'Backend/Framework',
-        items: ['NestJS', 'Express', 'gRPC', 'WebSocket', 'OAuth2'],
+        cat: 'Database',
+        items: ['PostgreSQL', 'MySQL', 'ClickHouse', 'Redis'],
     },
-    {cat: 'DB/Cache', items: ['PostgreSQL', 'Redis', 'ClickHouse']},
-    {cat: 'Infra', items: ['AWS', 'Nginx', 'Docker', 'Kafka', 'Kubernetes', 'ArgoCD']},
-    {cat: 'Observability', items: ['Datadog', 'CloudWatch', 'Prometheus']},
+    {
+        cat: 'Cloud & Infra',
+        items: [
+            'AWS (EC2, EKS, Lambda, S3, SQS, Aurora, Rekognition)',
+            'Docker',
+            'Kubernetes',
+            'Nginx',
+        ],
+    },
+    {
+        cat: 'DevOps',
+        items: ['GitLab CI/CD', 'Jenkins', 'ArgoCD', 'Grafana', 'Datadog', 'Prometheus'],
+    },
+    {
+        cat: 'Protocol & Communication',
+        items: ['gRPC', 'WebSocket', 'TCP Socket', 'Kafka', 'OAuth2'],
+    },
 ];
 
 export const CERTS: Cert[] = [
@@ -194,6 +278,18 @@ export const CERTS: Cert[] = [
         org: 'Amazon Web Services',
         issued: '2024-07',
         expires: 'No Expiration',
-        credUrl: 'https://...',
+    },
+];
+
+export const EDUCATION: Education[] = [
+    {
+        school: '용인송담대학교',
+        degree: '컴퓨터정보과',
+        period: '2013.03 – 2019.02',
+    },
+    {
+        school: '국가평생교육진흥원',
+        degree: '컴퓨터공학',
+        period: '2020.03 – 2020.08',
     },
 ];

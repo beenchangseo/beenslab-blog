@@ -3,9 +3,10 @@ import {GetAllBlogPostResponseDto} from '../app/lib/api';
 
 type PostListProps = {
     posts: GetAllBlogPostResponseDto[];
-}
+    showAdminButtons?: boolean;
+};
 
-export default function PostList({posts}: PostListProps) {
+export default function PostList({posts, showAdminButtons = false}: PostListProps) {
     return (
         <div className="flex flex-col">
             {posts.map((post: GetAllBlogPostResponseDto) => (
@@ -15,7 +16,9 @@ export default function PostList({posts}: PostListProps) {
                     des={post.description}
                     slug={post.slug}
                     categories={post.categories}
-                    key={post.title}
+                    postId={post.id}
+                    showAdminButtons={showAdminButtons}
+                    key={post.id}
                 />
             ))}
         </div>

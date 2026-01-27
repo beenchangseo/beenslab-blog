@@ -3,8 +3,13 @@ import {useState, ChangeEvent} from 'react';
 import PostList from './PostList';
 import {GetAllBlogPostResponseDto} from '../app/lib/api';
 
-// 검색 컴포넌트(클라이언트)
-export default function BlogSearch({posts}: {posts: GetAllBlogPostResponseDto[]}) {
+export default function BlogSearch({
+    posts,
+    showAdminButtons = false,
+}: {
+    posts: GetAllBlogPostResponseDto[];
+    showAdminButtons?: boolean;
+}) {
     const [search, setSearch] = useState('');
     const handleSearch = (e: ChangeEvent<HTMLInputElement>) =>
         setSearch(e.target.value.toLowerCase());
@@ -36,7 +41,7 @@ export default function BlogSearch({posts}: {posts: GetAllBlogPostResponseDto[]}
                     />
                 </div>
             </section>
-            <PostList posts={filteredPosts} />
+            <PostList posts={filteredPosts} showAdminButtons={showAdminButtons} />
         </>
     );
 }

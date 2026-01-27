@@ -1,8 +1,13 @@
 import Link from 'next/link';
-import {auth} from '../../lib/auth';
+import {getSession} from '@/lib/auth';
+import {redirect} from 'next/navigation';
 
 export default async function AdminPage() {
-    const session = await auth();
+    const session = await getSession();
+
+    if (!session) {
+        redirect('/admin/signin');
+    }
 
     return (
         <div className="min-h-screen p-6">
