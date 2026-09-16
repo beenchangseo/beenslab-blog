@@ -1,5 +1,5 @@
 import BlogPost from './BlogPost';
-import {GetAllBlogPostResponseDto} from '../app/lib/api';
+import {GetAllBlogPostResponseDto} from '../types/blog';
 
 type PostListProps = {
     posts: GetAllBlogPostResponseDto[];

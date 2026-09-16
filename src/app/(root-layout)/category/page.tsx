@@ -1,6 +1,11 @@
 import {Metadata} from 'next';
-import {fetchAllPosts, fetchCategories} from '../../lib/api';
-import CategoryFilter from '../../../components/category/CategoryFilter';
+import {Suspense} from 'react';
+import {getAllPosts, getCategories} from '@/lib/posts';
+import CategoryFilter, {
+    CategoryFilterFromSearchParams,
+} from '../../../components/category/CategoryFilter';
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
     title: '카테고리 - ChangBeen Seo',
@@ -47,7 +52,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Category() {
-    const posts = (await fetchAllPosts()).data;
-    const categories = (await fetchCategories()).data;
-    return <CategoryFilter posts={posts} categories={categories} />;
+    const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
+
+    // useSearchParams bails out of static rendering up to this boundary, so the fallback
+    // (unfiltered list) is what ends up in the prerendered HTML.
+    return (
+        <Suspense fallback={<CategoryFilter posts={posts} categories={categories} />}>
+            <CategoryFilterFromSearchParams posts={posts} categories={categories} />
+        </Suspense>
+    );
 }

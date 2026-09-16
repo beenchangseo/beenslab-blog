@@ -3,6 +3,7 @@
 import {prisma} from '@/lib/prisma';
 import {Prisma} from '@prisma/client';
 import {revalidatePath} from 'next/cache';
+import {getSession} from '@/lib/auth';
 import {generateSlugFromTitle} from '@/lib/slugify';
 
 async function ensureUniqueSlug(baseSlug: string, excludePostId?: string): Promise<string> {
@@ -32,16 +33,24 @@ export interface CreatePostInput {
     contents: string;
     tags: string[];
     categoryIds: string[];
-    userId: string;
 }
 
 export interface UpdatePostInput extends CreatePostInput {
     postId: string;
 }
 
+// Server Actions are reachable from every page that imports them (including public ones),
+// so each action has to verify the session itself; middleware only covers /admin/*.
+// Blog pages are statically cached, so every change revalidates all of them.
+
 export async function createPost(input: CreatePostInput) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
-        const {title, description, contents, tags, categoryIds, userId} = input;
+        const {title, description, contents, tags, categoryIds} = input;
 
         const baseSlug = generateSlugFromTitle(title);
         const slug = await ensureUniqueSlug(baseSlug);
@@ -54,7 +63,7 @@ export async function createPost(input: CreatePostInput) {
                     description,
                     contents,
                     tags,
-                    user_id: userId,
+                    user_id: session.userId,
                     update_time: new Date(),
                 },
             });
@@ -71,8 +80,7 @@ export async function createPost(input: CreatePostInput) {
             return newPost;
         });
 
-        revalidatePath('/blog');
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
 
         return {success: true, data: post};
     } catch (error) {
@@ -85,8 +93,13 @@ export async function createPost(input: CreatePostInput) {
 }
 
 export async function updatePost(input: UpdatePostInput) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
-        const {postId, title, description, contents, tags, categoryIds, userId} = input;
+        const {postId, title, description, contents, tags, categoryIds} = input;
 
         const existingPost = await prisma.post.findUnique({
             where: {id: postId},
@@ -132,9 +145,7 @@ export async function updatePost(input: UpdatePostInput) {
             return updatedPost;
         });
 
-        revalidatePath('/blog');
-        revalidatePath(`/blog/post/${slug}`);
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
 
         return {success: true, data: post};
     } catch (error) {
@@ -147,6 +158,11 @@ export async function updatePost(input: UpdatePostInput) {
 }
 
 export async function softDeletePost(postId: string) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
         const post = await prisma.post.update({
             where: {id: postId},
@@ -155,8 +171,7 @@ export async function softDeletePost(postId: string) {
             },
         });
 
-        revalidatePath('/blog');
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
 
         return {success: true, data: post};
     } catch (error) {
@@ -169,6 +184,11 @@ export async function softDeletePost(postId: string) {
 }
 
 export async function permanentlyDeletePost(postId: string) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             await tx.postOnCategory.deleteMany({
@@ -180,8 +200,7 @@ export async function permanentlyDeletePost(postId: string) {
             });
         });
 
-        revalidatePath('/blog');
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
 
         return {success: true};
     } catch (error) {

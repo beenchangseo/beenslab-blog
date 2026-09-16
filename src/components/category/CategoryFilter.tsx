@@ -4,10 +4,20 @@ import {useState} from 'react';
 import CategoryList from './CategoryList';
 import PostList from '../PostList';
 import {useSearchParams} from 'next/navigation';
+import {GetAllBlogPostResponseDto, GetCategoryResponseDto} from '../../types/blog';
 
-export default function CategoryFilter({posts, categories}: {posts: any[]; categories: any[]}) {
-    const searchParams = useSearchParams();
-    const [select, setSelect] = useState(searchParams.get('filter') || '');
+interface CategoryFilterProps {
+    posts: GetAllBlogPostResponseDto[];
+    categories: GetCategoryResponseDto[];
+    initialSelect?: string;
+}
+
+export default function CategoryFilter({
+    posts,
+    categories,
+    initialSelect = '',
+}: CategoryFilterProps) {
+    const [select, setSelect] = useState(initialSelect);
 
     const filteredPosts =
         select === '' ? posts : posts.filter((post) => post.categories.includes(select));
@@ -20,4 +30,9 @@ export default function CategoryFilter({posts, categories}: {posts: any[]; categ
             <PostList posts={filteredPosts} />
         </>
     );
+}
+
+export function CategoryFilterFromSearchParams(props: Omit<CategoryFilterProps, 'initialSelect'>) {
+    const searchParams = useSearchParams();
+    return <CategoryFilter {...props} initialSelect={searchParams.get('filter') || ''} />;
 }

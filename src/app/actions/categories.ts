@@ -2,6 +2,7 @@
 
 import {prisma} from '@/lib/prisma';
 import {revalidatePath} from 'next/cache';
+import {getSession} from '@/lib/auth';
 
 export interface CreateCategoryInput {
     keyword: string;
@@ -15,6 +16,11 @@ export interface UpdateCategoryInput {
 }
 
 export async function createCategory(input: CreateCategoryInput) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
         const {keyword, title} = input;
 
@@ -30,8 +36,7 @@ export async function createCategory(input: CreateCategoryInput) {
             data: {keyword, title},
         });
 
-        revalidatePath('/api/categories');
-        revalidatePath('/blog');
+        revalidatePath('/', 'layout');
 
         return {success: true, data: category};
     } catch (error) {
@@ -44,6 +49,11 @@ export async function createCategory(input: CreateCategoryInput) {
 }
 
 export async function updateCategory(input: UpdateCategoryInput) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
         const {categoryId, keyword, title} = input;
 
@@ -63,8 +73,7 @@ export async function updateCategory(input: UpdateCategoryInput) {
             data: {keyword, title},
         });
 
-        revalidatePath('/api/categories');
-        revalidatePath('/blog');
+        revalidatePath('/', 'layout');
 
         return {success: true, data: category};
     } catch (error) {
@@ -77,6 +86,11 @@ export async function updateCategory(input: UpdateCategoryInput) {
 }
 
 export async function deleteCategory(categoryId: string) {
+    const session = await getSession();
+    if (!session) {
+        return {success: false, error: 'Unauthorized'};
+    }
+
     try {
         const postsWithCategory = await prisma.postOnCategory.findMany({
             where: {category_id: categoryId},
@@ -93,8 +107,7 @@ export async function deleteCategory(categoryId: string) {
             where: {id: categoryId},
         });
 
-        revalidatePath('/api/categories');
-        revalidatePath('/blog');
+        revalidatePath('/', 'layout');
 
         return {success: true};
     } catch (error) {

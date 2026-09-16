@@ -159,7 +159,6 @@ export default function EditPostPage({params}: {params: {slug: string}}) {
                 contents: content,
                 tags: tagsArray,
                 categoryIds: selectedCategoryIds,
-                userId: userId,
             });
 
             if (result.success && result.data) {

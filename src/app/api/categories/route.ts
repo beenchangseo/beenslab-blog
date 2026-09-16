@@ -1,17 +1,11 @@
 import {NextResponse} from 'next/server';
-import {prisma} from '@/lib/prisma';
+import {getCategories} from '@/lib/posts';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const categories = await prisma.category.findMany({
-            select: {
-                id: true,
-                title: true,
-                keyword: true,
-            },
-        });
+        const categories = await getCategories();
 
         return NextResponse.json({data: categories});
     } catch (error) {

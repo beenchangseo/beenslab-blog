@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-import {prisma} from '@/lib/prisma';
+import {getAllPosts} from '@/lib/posts';
 
 export const revalidate = 3600;
 
@@ -7,58 +7,20 @@ export async function GET() {
     try {
         const base = 'https://blog.beenslab.com';
 
-        const postsData = await prisma.post.findMany({
-            where: {delete_time: null},
-            orderBy: {create_time: 'desc'},
-            include: {
-                PostOnCategory: {
-                    include: {
-                        category: {
-                            select: {keyword: true, title: true},
-                        },
-                    },
-                },
-            },
-        });
-
-        const posts = postsData.map((post: {slug: string | null; update_time: Date}) => ({
-            slug: post.slug || '',
-            update_time: post.update_time.toISOString(),
-        }));
-
-        const categories = await prisma.category.findMany({
-            select: {keyword: true},
-        });
+        const posts = await getAllPosts();
 
         const mostRecentPostUpdate =
             posts.length > 0
-                ? new Date(
-                      Math.max(
-                          ...posts.map((p: {update_time: string}) =>
-                              new Date(p.update_time).getTime(),
-                          ),
-                      ),
-                  )
+                ? new Date(Math.max(...posts.map((p) => new Date(p.update_time).getTime())))
                 : new Date();
 
         const postUrls = posts
             .map(
-                (p: {slug: string; update_time: string}) => `  <url>
+                (p) => `  <url>
     <loc>${base}/blog/post/${p.slug}</loc>
-    <lastmod>${new Date(p.update_time).toISOString()}</lastmod>
+    <lastmod>${p.update_time}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-  </url>`,
-            )
-            .join('\n');
-
-        const categoryUrls = categories
-            .map(
-                (cat: {keyword: string}) => `  <url>
-    <loc>${base}/category?filter=${cat.keyword}</loc>
-    <lastmod>${mostRecentPostUpdate.toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
   </url>`,
             )
             .join('\n');
@@ -90,7 +52,6 @@ export async function GET() {
     <priority>0.7</priority>
   </url>
 ${postUrls}
-${categoryUrls}
 </urlset>`;
 
         return new NextResponse(sitemap, {

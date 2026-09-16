@@ -1,14 +1,23 @@
 import {Mdx} from '../../../../../components/Mdx';
-import {fetchPost, fetchAllPosts, fetchCategories} from '../../../../lib/api';
+import {getAllPosts, getCategories, getPostBySlug} from '@/lib/posts';
 import Link from 'next/link';
 import Image from 'next/image';
 import {Metadata} from 'next';
 import Script from 'next/script';
+import {notFound} from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+    const posts = await getAllPosts();
+    return posts.filter((post) => post.slug).map((post) => ({slug: post.slug}));
+}
 
 export async function generateMetadata({params}: {params: {slug: string}}): Promise<Metadata> {
-    const post = (await fetchPost(params.slug)).data;
+    const post = await getPostBySlug(params.slug);
+    if (!post) {
+        notFound();
+    }
     const url = `https://blog.beenslab.com/blog/post/${params.slug}`;
     return {
         title: post.title,
@@ -43,8 +52,11 @@ export async function generateMetadata({params}: {params: {slug: string}}): Prom
 }
 
 export default async function PostPage({params}: {params: {slug: string}}) {
-    const post = (await fetchPost(params.slug)).data;
-    const categories = (await fetchCategories()).data;
+    const post = await getPostBySlug(params.slug);
+    if (!post) {
+        notFound();
+    }
+    const categories = await getCategories();
 
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',

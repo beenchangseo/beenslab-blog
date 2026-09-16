@@ -1,7 +1,7 @@
 'use client';
 import {useState, ChangeEvent} from 'react';
 import PostList from './PostList';
-import {GetAllBlogPostResponseDto} from '../app/lib/api';
+import {GetAllBlogPostResponseDto} from '../types/blog';
 
 export default function BlogSearch({
     posts,

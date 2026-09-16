@@ -39,12 +39,6 @@ export default function BoardEditorPage() {
     }, [router]);
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/admin/signin');
-        }
-    }, [status, router]);
-
-    useEffect(() => {
         fetchCategories();
     }, []);
 
@@ -111,7 +105,6 @@ export default function BoardEditorPage() {
                 contents: content,
                 tags: tagsArray,
                 categoryIds: selectedCategoryIds,
-                userId: userId,
             });
 
             if (result.success && result.data) {

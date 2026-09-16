@@ -1,6 +1,8 @@
 import {Metadata} from 'next';
-import {fetchAllPosts} from '../../lib/api';
+import {getAllPosts} from '@/lib/posts';
 import BlogSearch from '../../../components/BlogSearch';
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
     title: '블로그 - ChangBeen Seo',
@@ -46,6 +48,6 @@ export const metadata: Metadata = {
 };
 
 export default async function Blog() {
-    const posts = (await fetchAllPosts()).data;
+    const posts = await getAllPosts();
     return <BlogSearch posts={posts} />;
 }

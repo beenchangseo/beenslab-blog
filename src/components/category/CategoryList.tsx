@@ -1,7 +1,7 @@
 'use client';
 
 import {Dispatch, SetStateAction} from 'react';
-import {GetCategoryResponseDto} from '../../app/lib/api';
+import {GetCategoryResponseDto} from '../../types/blog';
 
 interface CategoryListProps {
     setSelect: Dispatch<SetStateAction<string>>;
