@@ -22,7 +22,7 @@
     "@sindresorhus/slugify": "^3.0.0",
     "@tailwindcss/typography": "^0.5.10",
     "@uiw/react-md-editor": "^4.0.4",
-    "@vercel/kv": "^3.0.0",
+    "@upstash/redis": "^1.38.4",
     "axios": "^1.7.7",
     "bcryptjs": "^3.0.3",
     "firebase": "^10.13.1",

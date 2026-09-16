@@ -1,11 +1,16 @@
 import {NextResponse} from 'next/server';
-import {kv} from '@/lib/kv';
+import {redis} from '@/lib/redis';
 
-export const runtime = 'edge';
+// Runs on the Node.js runtime so it executes in the project's function region (icn1).
 export const dynamic = 'force-dynamic';
 
+const ALLOWED_DOMAIN = 'blog.beenslab.com';
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const DAILY_KEY_TTL_SECONDS = 60 * 60 * 48;
+
+// "Today" follows Korean time so the daily count resets at midnight KST.
 function getTodayDate(): string {
-    return new Date().toISOString().split('T')[0];
+    return new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Seoul'}).format(new Date());
 }
 
 function generateSVG(todayHits: number, totalHits: number): string {
@@ -34,26 +39,20 @@ export async function GET(request: Request) {
             return new NextResponse('Missing post_id or domain parameter', {status: 400});
         }
 
-        const today = getTodayDate();
-        const key = `blog-hits:${domain}:${postId}`;
+        if (domain !== ALLOWED_DOMAIN || postId.length > 200 || !SLUG_PATTERN.test(postId)) {
+            return new NextResponse('Invalid post_id or domain parameter', {status: 400});
+        }
 
-        const data =
-            (await kv.get<{total_hits?: number; today_hits?: number; last_hits_date?: string}>(
-                key,
-            )) || {};
+        const totalKey = `blog-hits:${domain}:${postId}:total`;
+        const dailyKey = `blog-hits:${domain}:${postId}:${getTodayDate()}`;
 
-        const prevTotal = data.total_hits || 0;
-        const prevToday = data.today_hits || 0;
-        const lastDate = data.last_hits_date || '';
-
-        const totalHits = prevTotal + 1;
-        const todayHits = lastDate === today ? prevToday + 1 : 1;
-
-        await kv.set(key, {
-            total_hits: totalHits,
-            today_hits: todayHits,
-            last_hits_date: today,
-        });
+        // INCR is atomic, so concurrent views are not lost.
+        const [totalHits, todayHits] = await redis
+            .pipeline()
+            .incr(totalKey)
+            .incr(dailyKey)
+            .expire(dailyKey, DAILY_KEY_TTL_SECONDS)
+            .exec();
 
         const svg = generateSVG(todayHits, totalHits);
 
