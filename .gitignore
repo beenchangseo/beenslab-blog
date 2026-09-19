@@ -50,3 +50,6 @@ scripts
 
 # gstack
 .gstack
+# playwright
+test-results
+playwright-report

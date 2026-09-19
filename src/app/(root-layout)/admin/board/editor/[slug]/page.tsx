@@ -1,7 +1,7 @@
 'use client';
 
 import MDEditor from '@uiw/react-md-editor';
-import { useState, useEffect, use } from 'react';
+import {useState, useEffect, use} from 'react';
 import {updatePost} from '@/app/actions/posts';
 import {useRouter} from 'next/navigation';
 
@@ -202,7 +202,7 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
             <h1 className="text-3xl font-bold mb-6">게시글 수정</h1>
 
             {error && (
-                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
                     {error}
                 </div>
             )}
@@ -246,7 +246,7 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
                     {categories.map((cat) => (
                         <label
                             key={cat.id}
-                            className="flex items-center space-x-2 p-2 border border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                            className="flex items-center space-x-2 p-2 border border-gray-300 dark:border-gray-600 rounded-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
                             <input
                                 type="checkbox"
@@ -269,13 +269,13 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
                 <button
                     onClick={handleUpdate}
                     disabled={isLoading}
-                    className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="bg-blue-500 text-white px-6 py-2 rounded-sm hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                     {isLoading ? '수정 중...' : '수정'}
                 </button>
                 <button
                     onClick={() => router.back()}
-                    className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+                    className="bg-gray-500 text-white px-6 py-2 rounded-sm hover:bg-gray-600"
                 >
                     취소
                 </button>

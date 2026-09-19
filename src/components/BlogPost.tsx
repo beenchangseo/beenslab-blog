@@ -78,13 +78,13 @@ export default function BlogPost({
                     <div className="flex gap-2 mt-3">
                         <Link
                             href={`/admin/board/editor/${slug}`}
-                            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                            className="px-3 py-1 text-sm bg-blue-500 text-white rounded-sm hover:bg-blue-600"
                         >
                             수정
                         </Link>
                         <button
                             onClick={() => setShowDeleteModal(true)}
-                            className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                            className="px-3 py-1 text-sm bg-red-500 text-white rounded-sm hover:bg-red-600"
                         >
                             삭제
                         </button>
@@ -101,14 +101,14 @@ export default function BlogPost({
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 disabled={isDeleting}
-                                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 dark:hover:bg-gray-500"
+                                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-sm hover:bg-gray-400 dark:hover:bg-gray-500"
                             >
                                 취소
                             </button>
                             <button
                                 onClick={handleDelete}
                                 disabled={isDeleting}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-red-500 text-white rounded-sm hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 {isDeleting ? '삭제 중...' : '삭제'}
                             </button>

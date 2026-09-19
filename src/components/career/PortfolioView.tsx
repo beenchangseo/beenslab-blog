@@ -16,7 +16,7 @@ export default function PortfolioView() {
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                     {p.title}
                                 </h3>
-                                <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded whitespace-nowrap">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-sm whitespace-nowrap">
                                     {p.period}
                                 </span>
                             </header>

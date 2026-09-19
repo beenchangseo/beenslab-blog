@@ -11,7 +11,7 @@ interface CategoryListProps {
 
 // border-0.5는 Tailwind에 없는 값이라 CSS가 만들어지지 않았다(= 테두리 없음).
 const baseStyle =
-    'px-3 py-1 sm:text-lg rounded-2xl border border-gray-700 dark:border-gray-300 transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#111111]';
+    'px-3 py-1 sm:text-lg rounded-2xl border border-gray-700 dark:border-gray-300 transition-transform duration-300 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#111111]';
 const selectedStyle = `${baseStyle} border-2 bg-green-100 dark:bg-green-900`;
 const defaultStyle = `${baseStyle} hover:scale-110`;
 

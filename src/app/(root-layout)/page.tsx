@@ -44,7 +44,7 @@ export default function Home() {
                         style={{width: 180, height: 180}}
                     />
                     <div>
-                        <h1 className="font-bold text-4xl sm:text-6xl font-mono mb-4 bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 bg-clip-text text-transparent">
+                        <h1 className="font-bold text-4xl sm:text-6xl font-mono mb-4 bg-linear-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 bg-clip-text text-transparent">
                             ChangBeen Seo
                         </h1>
                         <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 font-medium leading-relaxed max-w-2xl">
@@ -55,7 +55,7 @@ export default function Home() {
             </section>
 
             <section className="max-w-3xl mx-auto mb-16 px-4">
-                <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-10 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+                <div className="bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-10 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
                     <div className="flex items-start gap-4 mb-6">
                         <span className="text-5xl">✍️</span>
                         <div>

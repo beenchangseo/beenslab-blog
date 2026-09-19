@@ -66,7 +66,7 @@ export default function Header() {
                 isScrolled ? 'shadow-md shadow-gray-200 dark:shadow-black/40' : ''
             }`}
         >
-            <div className="max-w-screen-md h-20 flex flex-nowrap items-center justify-between m-auto px-8">
+            <div className="max-w-(--breakpoint-md) h-20 flex flex-nowrap items-center justify-between m-auto px-8">
                 <Link href="/">
                     <span className="font-bold stroke-black dark:stroke-white">Beenslab Blog</span>
                 </Link>

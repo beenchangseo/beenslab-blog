@@ -13,7 +13,9 @@ export async function generateStaticParams() {
     return posts.filter((post) => post.slug).map((post) => ({slug: post.slug}));
 }
 
-export async function generateMetadata(props: {params: Promise<{slug: string}>}): Promise<Metadata> {
+export async function generateMetadata(props: {
+    params: Promise<{slug: string}>;
+}): Promise<Metadata> {
     const params = await props.params;
     const post = await getPostBySlug(params.slug);
     if (!post) {
@@ -125,7 +127,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
     // 링크를 button으로 감싸면 유효하지 않은 HTML이라 Link 자체에 스타일을 준다.
     // prose가 a에 밑줄을 넣으므로 no-underline으로 되돌린다.
     const categoryLinkStyle =
-        'inline-flex h-8 items-center px-3 m-1 text-xs no-underline font-medium text-inherit border-2 border-gray-700 dark:border-gray-300 rounded-lg transition-colors duration-150 hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#111111]';
+        'inline-flex h-8 items-center px-3 m-1 text-xs no-underline font-medium text-inherit border-2 border-gray-700 dark:border-gray-300 rounded-lg transition-colors duration-150 hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#111111]';
 
     return (
         <>

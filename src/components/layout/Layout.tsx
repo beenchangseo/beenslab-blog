@@ -11,7 +11,9 @@ export default function Layout(props: LayoutProps) {
         <>
             <Header />
             <main className="transition duration-500 bg-white dark:bg-[#111111] text-black dark:text-white">
-                <div className="max-w-screen-md flex flex-col px-10 m-auto">{props.children}</div>
+                <div className="max-w-(--breakpoint-md) flex flex-col px-10 m-auto">
+                    {props.children}
+                </div>
             </main>
             <Footer />
         </>

@@ -1,8 +1,47 @@
 /* @import는 @charset/@layer 외 모든 규칙보다 앞에 와야 한다.
    Next 16의 Turbopack CSS 파서는 이 순서를 어기면 빌드를 실패시킨다.
    코드 하이라이트 테마(rehype-highlight가 붙이는 .hljs-* 클래스용). */
-@import 'highlight.js/styles/atom-one-dark.css';
+@import 'highlight.js/styles/atom-one-dark.css' layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* v4는 JS 설정 파일 대신 @plugin으로 플러그인을 불러온다.
+   업그레이드 도구가 tailwind.config.ts를 지우면서 이 줄을 빠뜨려
+   본문의 prose 스타일이 전부 사라졌었다. */
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans:
+    Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, Helvetica Neue, Segoe UI, Apple SD Gothic Neo,
+    Noto Sans KR, Malgun Gothic, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono,
+    Courier New, Pretendard Variable, Pretendard, monospace;
+
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  );
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}

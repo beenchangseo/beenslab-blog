@@ -10,7 +10,7 @@ const blogUrl = 'https://blog.beenslab.com/';
 
 function Divider() {
     return (
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700 my-6" />
+        <div className="h-px w-full bg-linear-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700 my-6" />
     );
 }
 
@@ -20,7 +20,7 @@ export default function CareerPage() {
     const headerTitle = useMemo(() => (mode === 'resume' ? 'Resume' : 'Portfolio'), [mode]);
 
     return (
-        <main className="min-h-screen bg-gradient-to-b">
+        <main className="min-h-screen bg-linear-to-b">
             <div className="mx-auto max-w-5xl px-4 py-10">
                 {/* 헤더 */}
                 <Header mode={mode} onModeChange={setMode} />

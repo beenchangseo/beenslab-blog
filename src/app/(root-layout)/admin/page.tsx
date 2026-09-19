@@ -21,12 +21,12 @@ export default async function AdminPage() {
                     <h2 className="text-xl font-semibold mb-4">게시글 관리</h2>
                     <Link
                         href="/admin/board/editor"
-                        className="w-full block bg-gray-500 text-white py-2 rounded text-center hover:bg-gray-600"
+                        className="w-full block bg-gray-500 text-white py-2 rounded-sm text-center hover:bg-gray-600"
                         prefetch={true}
                     >
                         새 게시글 작성
                     </Link>
-                    <button className="w-full mt-2 bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                    <button className="w-full mt-2 bg-gray-500 text-white py-2 rounded-sm hover:bg-gray-600">
                         게시글 리스트
                     </button>
                 </div>
@@ -34,10 +34,10 @@ export default async function AdminPage() {
                 {/* 카테고리 관리 */}
                 <div className="shadow-md rounded-lg p-4">
                     <h2 className="text-xl font-semibold mb-4">카테고리 관리</h2>
-                    <button className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                    <button className="w-full bg-gray-500 text-white py-2 rounded-sm hover:bg-gray-600">
                         카테고리 추가
                     </button>
-                    <button className="w-full mt-2 bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                    <button className="w-full mt-2 bg-gray-500 text-white py-2 rounded-sm hover:bg-gray-600">
                         카테고리 리스트
                     </button>
                 </div>
@@ -45,7 +45,7 @@ export default async function AdminPage() {
                 {/* 댓글 관리 */}
                 <div className="shadow-md rounded-lg p-4">
                     <h2 className="text-xl font-semibold mb-4">댓글 관리</h2>
-                    <button className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                    <button className="w-full bg-gray-500 text-white py-2 rounded-sm hover:bg-gray-600">
                         댓글 검토
                     </button>
                 </div>
@@ -53,7 +53,7 @@ export default async function AdminPage() {
                 {/* 사용자 관리 */}
                 <div className="shadow-md rounded-lg p-4">
                     <h2 className="text-xl font-semibold mb-4">사용자 관리</h2>
-                    <button className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                    <button className="w-full bg-gray-500 text-white py-2 rounded-sm hover:bg-gray-600">
                         사용자 리스트
                     </button>
                 </div>
@@ -61,7 +61,7 @@ export default async function AdminPage() {
                 {/* 블로그 설정 */}
                 <div className="shadow-md rounded-lg p-4">
                     <h2 className="text-xl font-semibold mb-4">블로그 설정</h2>
-                    <button className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                    <button className="w-full bg-gray-500 text-white py-2 rounded-sm hover:bg-gray-600">
                         설정 변경
                     </button>
                 </div>

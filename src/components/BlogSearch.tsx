@@ -36,7 +36,7 @@ export default function BlogSearch({
                     </svg>
                     <input
                         type="search"
-                        className="flex-1 outline-none bg-transparent appearance-none"
+                        className="flex-1 outline-hidden bg-transparent appearance-none"
                         onChange={handleSearch}
                         placeholder="검색하기"
                         aria-label="게시글 제목 검색"

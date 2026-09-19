@@ -1,8 +1,14 @@
-import { Mode } from "../../data/career";
+import {Mode} from '../../data/career';
 
-export default function ModeToggle({ mode, onModeChange }: { mode: Mode; onModeChange: (m: Mode) => void }) {
+export default function ModeToggle({
+    mode,
+    onModeChange,
+}: {
+    mode: Mode;
+    onModeChange: (m: Mode) => void;
+}) {
     return (
-        <div className="mt-6 inline-flex rounded-2xl border bg-white dark:bg-gray-950 p-1 shadow-sm">
+        <div className="mt-6 inline-flex rounded-2xl border bg-white dark:bg-gray-950 p-1 shadow-xs">
             <button
                 aria-label="Resume"
                 onClick={() => onModeChange('resume')}

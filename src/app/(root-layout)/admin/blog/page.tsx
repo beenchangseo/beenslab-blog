@@ -12,7 +12,7 @@ export default async function AdminBlogPage() {
                 <h1 className="text-3xl font-bold">블로그 관리</h1>
                 <Link
                     href="/admin/board/editor"
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    className="bg-green-500 text-white px-4 py-2 rounded-sm hover:bg-green-600"
                 >
                     새 글 작성
                 </Link>
