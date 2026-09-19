@@ -17,6 +17,11 @@ npm start              # 포트 7777
 npm run lint           # eslint . — next lint는 Next 16에서 삭제됐다
 npm run typecheck      # tsc --noEmit
 npx prisma generate    # schema.prisma 수정 후 (postinstall에서도 실행됨)
+
+npm run db:backup      # blog 스키마 전체 덤프 (~/beenslab-blog-backups)
+npm run migrate:new -- <이름>  # 마이그레이션 SQL 생성 (DB 미적용)
+npm run migrate:deploy # 마이그레이션 적용
+npm run migrate:status # 적용 상태 확인
 ```
 
 - 쉘에 `NODE_ENV=development`가 설정돼 있으면 `next build`가 prerender 단계에서 `Cannot read properties of null (reading 'useContext')`로 실패한다(Next 16에서도 `/career`에서 동일하게 재현) → `NODE_ENV=production npm run build`.
@@ -62,7 +67,27 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 - `Post.title`은 `@unique`이고, soft delete된 글도 이 제약에 포함된다. 수정 시 `PostOnCategory` 조인 행은 트랜잭션 안에서 전부 지우고 다시 만든다.
 - 본문은 `post.contents`에 Markdown으로 저장된다. `src/components/Mdx.tsx`는 이름과 달리 MDX가 아니라 `react-markdown` + `remark-gfm` + `rehype-highlight`이고, 본문의 raw HTML은 렌더링되지 않고 텍스트로 보인다(코드 하이라이트 테마는 `globals.css`의 highlight.js import). 게시글용 이미지는 `public/images/`에 커밋해서 정적 파일로 제공한다.
 - 마크다운 `![](...)`에는 크기 정보가 없어 그냥 두면 원본을 통째로 받고 레이아웃도 밀린다. `Mdx.tsx`가 `img`를 가로채 `src/lib/imageSize.ts`로 PNG/JPEG 헤더에서 실제 크기를 읽고 `next/image`에 넘긴다(의존성 없이 직접 파싱, `public/` 밖 경로와 외부 URL은 null 반환). 새 이미지 포맷을 쓰려면 이 파서에 추가해야 한다.
-- `prisma/migrations`는 없다. 테이블은 snake_case(`@@map`)이고, `OauthClient` 모델은 쓰지 않는다(이전 OAuth 연동 잔재).
+- 테이블은 snake_case(`@@map`)이고, `OauthClient` 모델은 쓰지 않는다(이전 OAuth 연동 잔재).
+
+### 데이터베이스와 마이그레이션
+
+Oracle Cloud 춘천 VM의 PostgreSQL 16. **테이블은 `public`이 아니라 `blog` 스키마에 있고**, 접속 문자열의 `?schema=blog`가 `search_path`를 잡아준다. `pgcrypto`도 `blog` 스키마에 설치돼 있다.
+
+**`prisma migrate dev`를 쓰지 말 것.** 로컬 개발과 프로덕션이 DB 하나를 공유하므로, `migrate dev`는 운영 데이터에 바로 적용되고 드리프트를 감지하면 리셋을 제안한다. 대신 이 흐름을 쓴다:
+
+```bash
+npm run db:backup                      # 스키마 바꾸기 전 덤프 (~/beenslab-blog-backups)
+# schema.prisma 수정
+npm run migrate:new -- add_cover_image # SQL만 생성, DB는 건드리지 않음
+# 생성된 migration.sql 확인 (마음에 안 들면 디렉터리 삭제하면 끝)
+npm run migrate:deploy                 # 적용
+npm run migrate:status                 # 확인
+```
+
+- 마이그레이션은 2026-09-20에 베이스라인을 잡았다. `0_init`은 기존 운영 DB 구조를 그대로 옮겨 적은 것이고, **실행된 적 없이 `migrate resolve --applied`로 기록만 했다**(`_prisma_migrations`의 `applied_steps_count=0`). 빈 DB에 `migrate deploy`를 돌릴 때만 실제로 실행된다.
+- Prisma가 생성한 원본 베이스라인은 `CREATE SCHEMA "public"`이었는데 `"blog"`로 고쳤다. 안 고치면 빈 DB에서 "no schema has been selected to create in"으로 실패한다.
+- 백업은 저장소 밖(`~/beenslab-blog-backups/`)에 둔다. 게시글 본문이 들어있어 git에 들어가면 안 된다.
+- 접속이 `sslmode=disable`이다. 자격증명과 데이터가 공용 인터넷 구간을 평문으로 지난다. VM에 인증서를 붙이고 `sslmode=require`로 바꾸는 게 맞다(미처리).
 
 ### 인증
 
