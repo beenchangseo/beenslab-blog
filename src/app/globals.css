@@ -1,34 +1,8 @@
+/* @import는 @charset/@layer 외 모든 규칙보다 앞에 와야 한다.
+   Next 16의 Turbopack CSS 파서는 이 순서를 어기면 빌드를 실패시킨다.
+   코드 하이라이트 테마(rehype-highlight가 붙이는 .hljs-* 클래스용). */
+@import 'highlight.js/styles/atom-one-dark.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'highlight.js/styles/atom-one-dark.css';
-
-/* :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-} */

@@ -38,10 +38,6 @@ export default function BoardEditorPage() {
         checkAuth();
     }, [router]);
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
     async function fetchCategories() {
         try {
             const response = await fetch('/api/categories');
@@ -54,6 +50,15 @@ export default function BoardEditorPage() {
             setError('카테고리를 불러오는데 실패했습니다.');
         }
     }
+
+    // 선언보다 먼저 호출하면 react-hooks/immutability 규칙에 걸린다.
+    // set-state-in-effect는 오탐이다. fetchCategories는 await 뒤에 setState를 하므로
+    // 이펙트 본문에서 동기적으로 상태를 바꾸지 않는다.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     function toggleCategory(categoryId: string) {
         setSelectedCategoryIds((prev) =>

@@ -1,7 +1,7 @@
 'use client';
 
 import MDEditor from '@uiw/react-md-editor';
-import {useState, useEffect} from 'react';
+import { useState, useEffect, use } from 'react';
 import {updatePost} from '@/app/actions/posts';
 import {useRouter} from 'next/navigation';
 
@@ -21,7 +21,8 @@ interface Post {
     categories: string[];
 }
 
-export default function EditPostPage({params}: {params: {slug: string}}) {
+export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
+    const params = use(props.params);
     const router = useRouter();
     const [userId, setUserId] = useState<string | null>(null);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -49,13 +50,6 @@ export default function EditPostPage({params}: {params: {slug: string}}) {
         };
         checkAuth();
     }, [router]);
-
-    useEffect(() => {
-        if (!isCheckingAuth && userId) {
-            fetchCategories();
-            fetchPost();
-        }
-    }, [isCheckingAuth, userId]);
 
     async function fetchCategories() {
         try {
@@ -107,6 +101,20 @@ export default function EditPostPage({params}: {params: {slug: string}}) {
             setIsFetching(false);
         }
     }
+
+    // 선언보다 먼저 호출하면 react-hooks/immutability 규칙에 걸리므로
+    // fetchCategories/fetchPost 선언 뒤에 둔다.
+    // set-state-in-effect는 오탐이다. 두 함수 모두 await 뒤에 setState를 하므로
+    // 이펙트 본문에서 동기적으로 상태를 바꾸지 않는다. 데이터 로딩을 취소 가능한
+    // 형태로 정리하는 건 에디터를 손보는 Phase 3에서 함께 한다.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    useEffect(() => {
+        if (!isCheckingAuth && userId) {
+            fetchCategories();
+            fetchPost();
+        }
+    }, [isCheckingAuth, userId]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     function toggleCategory(categoryId: string) {
         setSelectedCategoryIds((prev) =>

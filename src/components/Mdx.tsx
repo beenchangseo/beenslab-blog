@@ -1,4 +1,3 @@
-import React from 'react';
 import Image from 'next/image';
 import ReactMarkdown, {type Components} from 'react-markdown';
 import remarkGfm from 'remark-gfm';

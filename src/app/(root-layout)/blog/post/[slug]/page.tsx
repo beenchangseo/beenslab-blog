@@ -13,7 +13,8 @@ export async function generateStaticParams() {
     return posts.filter((post) => post.slug).map((post) => ({slug: post.slug}));
 }
 
-export async function generateMetadata({params}: {params: {slug: string}}): Promise<Metadata> {
+export async function generateMetadata(props: {params: Promise<{slug: string}>}): Promise<Metadata> {
+    const params = await props.params;
     const post = await getPostBySlug(params.slug);
     if (!post) {
         notFound();
@@ -49,7 +50,8 @@ export async function generateMetadata({params}: {params: {slug: string}}): Prom
     };
 }
 
-export default async function PostPage({params}: {params: {slug: string}}) {
+export default async function PostPage(props: {params: Promise<{slug: string}>}) {
+    const params = await props.params;
     const post = await getPostBySlug(params.slug);
     if (!post) {
         notFound();
@@ -145,7 +147,7 @@ export default async function PostPage({params}: {params: {slug: string}}) {
                     <div className="flex-auto mb-4">
                         {post.categories.map((item: string, index: number) => {
                             const category = categories.find(
-                                (category: any) => category.keyword === item,
+                                (category) => category.keyword === item,
                             );
                             return (
                                 <Link
