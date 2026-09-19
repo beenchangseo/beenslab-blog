@@ -29,9 +29,7 @@ export async function generateMetadata({params}: {params: {slug: string}}): Prom
             description: post.description,
             url,
             type: 'article',
-            images: [
-                {url: 'https://blog.beenslab.com/images/default-og.png', width: 1200, height: 630},
-            ],
+            images: [{url: '/opengraph-image', width: 1200, height: 630, alt: post.title}],
             publishedTime: post.create_time,
             modifiedTime: post.update_time,
             authors: ['ChangBeen Seo'],
@@ -39,9 +37,9 @@ export async function generateMetadata({params}: {params: {slug: string}}): Prom
         },
         twitter: {
             card: 'summary_large_image',
+            images: ['/twitter-image'],
             title: post.title,
             description: post.description,
-            images: ['https://blog.beenslab.com/images/default-og.png'],
             creator: '@beenchangseo',
         },
         alternates: {
@@ -105,12 +103,12 @@ export default async function PostPage({params}: {params: {slug: string}}) {
             url: 'https://blog.beenslab.com',
             logo: {
                 '@type': 'ImageObject',
-                url: 'https://blog.beenslab.com/images/logo.png',
+                url: 'https://blog.beenslab.com/apple-icon',
             },
         },
         datePublished: post.create_time,
         dateModified: post.update_time,
-        image: 'https://blog.beenslab.com/images/default-og.png',
+        image: 'https://blog.beenslab.com/opengraph-image',
         inLanguage: 'ko',
     };
 
@@ -122,8 +120,10 @@ export default async function PostPage({params}: {params: {slug: string}}) {
         });
     };
 
-    const categoryButtonStyle =
-        'h-8 px-3 m-1 text-xs border-2 border-gray-700 dark:border-gray-300 transition-colors duration-150 rounded-lg cursor-pointer focus:shadow-outline hover:bg-gray-300';
+    // 링크를 button으로 감싸면 유효하지 않은 HTML이라 Link 자체에 스타일을 준다.
+    // prose가 a에 밑줄을 넣으므로 no-underline으로 되돌린다.
+    const categoryLinkStyle =
+        'inline-flex h-8 items-center px-3 m-1 text-xs no-underline font-medium text-inherit border-2 border-gray-700 dark:border-gray-300 rounded-lg transition-colors duration-150 hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#111111]';
 
     return (
         <>
@@ -139,40 +139,46 @@ export default async function PostPage({params}: {params: {slug: string}}) {
             />
             <section>
                 <div className="mt-10 pb-10 border-b-2 mb-10 prose dark:prose-invert">
-                    <h1 className="mb-8 font-bold text-2xl sm:text-4xl font-mono">{post.title}</h1>
+                    {/* 제목은 대부분 한글이다. font-mono를 두면 공백/문장부호만 등폭으로
+                        잡혀 글자 사이가 들쭉날쭉해지므로 본문과 같은 폰트를 쓴다. */}
+                    <h1 className="mb-8 font-bold text-2xl sm:text-4xl">{post.title}</h1>
                     <div className="flex-auto mb-4">
                         {post.categories.map((item: string, index: number) => {
                             const category = categories.find(
                                 (category: any) => category.keyword === item,
                             );
                             return (
-                                <button className={categoryButtonStyle} key={index}>
-                                    <Link href={{pathname: '/category', query: {filter: item}}}>
-                                        {category ? category.title : item}
-                                    </Link>
-                                </button>
+                                <Link
+                                    className={categoryLinkStyle}
+                                    key={index}
+                                    href={{pathname: '/category', query: {filter: item}}}
+                                >
+                                    {category ? category.title : item}
+                                </Link>
                             );
                         })}
                     </div>
                     <div className="flex items-center justify-between mb-16">
                         <span className="text-sm">
-                            <a href="https://blog.beenslab.com/">beenchangseo</a>
+                            <Link href="/">beenchangseo</Link>
                         </span>
                         <span className="ml-1 mr-1">·</span>
-                        <span className="text-sm font-medium text-gray-500">
+                        <time
+                            className="text-sm font-medium text-gray-500"
+                            dateTime={post.create_time}
+                        >
                             {formatDate(post.create_time.toString())}
-                        </span>
+                        </time>
                         <span className="flex items-center ml-auto">
-                            <a href="#">
-                                <Image
-                                    className="mb-0 mt-0"
-                                    src={`/api/blog/count?post_id=${params.slug}&domain=blog.beenslab.com`}
-                                    alt="Hits"
-                                    width={200}
-                                    height={20}
-                                    unoptimized
-                                />
-                            </a>
+                            {/* 조회수 배지. 링크가 아니므로 a로 감싸지 않는다. */}
+                            <Image
+                                className="mb-0 mt-0"
+                                src={`/api/blog/count?post_id=${params.slug}&domain=blog.beenslab.com`}
+                                alt="조회수"
+                                width={200}
+                                height={20}
+                                unoptimized
+                            />
                         </span>
                     </div>
                     <Mdx markdown={post.contents} />

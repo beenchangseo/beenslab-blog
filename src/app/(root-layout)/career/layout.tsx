@@ -22,22 +22,15 @@ export const metadata: Metadata = {
         siteName: 'Beenchangseo Blog',
         locale: 'ko_KR',
         type: 'profile',
-        images: [
-            {
-                url: 'https://blog.beenslab.com/images/default-og.png',
-                width: 1200,
-                height: 630,
-                alt: '서창빈 이력서',
-            },
-        ],
+        images: [{url: '/opengraph-image', width: 1200, height: 630, alt: '서창빈 이력서'}],
     },
     twitter: {
         card: 'summary_large_image',
         title: '이력서 - 서창빈 (Node.js 백엔드 엔지니어)',
         description:
             '암호화폐 거래소 백엔드 개발 및 SRE. 24,000배 쿼리 성능 개선, 연간 $82,000 비용 절감 경험.',
-        images: ['https://blog.beenslab.com/images/default-og.png'],
         creator: '@beenchangseo',
+        images: ['/twitter-image'],
     },
     alternates: {
         canonical: 'https://blog.beenslab.com/career',

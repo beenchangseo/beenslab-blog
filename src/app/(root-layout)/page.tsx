@@ -14,21 +14,14 @@ export const metadata: Metadata = {
         siteName: 'Beenchangseo Blog',
         locale: 'ko_KR',
         type: 'website',
-        images: [
-            {
-                url: 'https://blog.beenslab.com/images/default-og.png',
-                width: 1200,
-                height: 630,
-                alt: 'ChangBeen Seo Blog',
-            },
-        ],
+        images: [{url: '/opengraph-image', width: 1200, height: 630, alt: 'ChangBeen Seo Blog'}],
     },
     twitter: {
         card: 'summary_large_image',
         title: 'ChangBeen Seo - 백엔드 개발자',
         description: '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다.',
-        images: ['https://blog.beenslab.com/images/default-og.png'],
         creator: '@beenchangseo',
+        images: ['/twitter-image'],
     },
     alternates: {
         canonical: 'https://blog.beenslab.com/',
@@ -42,10 +35,11 @@ export default function Home() {
                 <div className="flex flex-col items-center text-center gap-6">
                     <Image
                         src="/images/profile.jpeg"
-                        alt="profile"
+                        alt="서창빈 프로필 사진"
                         width={180}
                         height={180}
-                        className="rounded-full shadow-lg"
+                        // 원본이 정사각형이 아니라서 object-cover가 없으면 눌려 보인다.
+                        className="rounded-full shadow-lg object-cover"
                         priority={true}
                         style={{width: 180, height: 180}}
                     />

@@ -29,7 +29,9 @@ export default function Footer() {
                     </svg>
                 </a>
             </div>
-            <div className="text-sm mt-2">Copyright © 2024 Changbeen seo</div>
+            <div className="text-sm mt-2">
+                Copyright © {new Date().getFullYear()} Changbeen seo
+            </div>
             <div className="text-xs mt-2">beenchangseo</div>
         </footer>
     );

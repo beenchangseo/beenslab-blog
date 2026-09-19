@@ -26,21 +26,14 @@ export const metadata: Metadata = {
         siteName: 'Beenchangseo Blog',
         locale: 'ko_KR',
         type: 'website',
-        images: [
-            {
-                url: 'https://blog.beenslab.com/images/default-og.png',
-                width: 1200,
-                height: 630,
-                alt: 'Beenchangseo Blog',
-            },
-        ],
+        images: [{url: '/opengraph-image', width: 1200, height: 630, alt: 'Beenchangseo Blog'}],
     },
     twitter: {
         card: 'summary_large_image',
         title: '블로그 - ChangBeen Seo',
         description: '백엔드 개발, AWS, DevOps, 데이터베이스 최적화 등 실전 경험과 기술 인사이트',
-        images: ['https://blog.beenslab.com/images/default-og.png'],
         creator: '@beenchangseo',
+        images: ['/twitter-image'],
     },
     alternates: {
         canonical: 'https://blog.beenslab.com/blog',

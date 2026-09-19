@@ -44,3 +44,9 @@ next-env.d.ts
 
 # script
 scripts
+
+# claude
+.omc
+
+# gstack
+.gstack

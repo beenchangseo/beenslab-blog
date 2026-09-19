@@ -32,7 +32,7 @@ export const metadata: Metadata = {
         type: 'website',
         images: [
             {
-                url: 'https://blog.beenslab.com/images/default-og.png',
+                url: '/opengraph-image',
                 width: 1200,
                 height: 630,
                 alt: 'Beenchangseo Blog Categories',
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: '카테고리 - ChangBeen Seo',
         description: '다양한 기술 주제별로 분류된 블로그 포스트',
-        images: ['https://blog.beenslab.com/images/default-og.png'],
         creator: '@beenchangseo',
+        images: ['/twitter-image'],
     },
     alternates: {
         canonical: 'https://blog.beenslab.com/category',
