@@ -6,17 +6,14 @@ import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {logout} from '@/app/actions/auth';
 import DarkModeButton from '../mode/DarkMode';
+import {GetCategoryResponseDto} from '@/types/blog';
 
-export default function Header() {
+export default function Header({categories = []}: {categories?: GetCategoryResponseDto[]}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const router = useRouter();
-
-    const handleLogin = () => {
-        router.push('/admin/signin');
-    };
 
     const handleLogout = async () => {
         setIsLoggedIn(false);
@@ -61,21 +58,35 @@ export default function Header() {
 
     return (
         <header
-            className={`sticky top-0 left-0 w-full z-10 h-20 font-mono transition duration-500 bg-white dark:bg-[#111111] ${
-                // 다크 모드에서 밝은 회색 그림자가 떠 보이던 하드코딩 값을 대체한다.
-                isScrolled ? 'shadow-md shadow-gray-200 dark:shadow-black/40' : ''
+            className={`sticky top-0 left-0 z-20 w-full bg-surface transition-shadow ${
+                isScrolled ? 'shadow-sm shadow-black/5 dark:shadow-black/40' : ''
             }`}
         >
-            <div className="max-w-(--breakpoint-md) h-20 flex flex-nowrap items-center justify-between m-auto px-8">
-                <Link href="/">
-                    <span className="font-bold stroke-black dark:stroke-white">Beenslab Blog</span>
+            <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-6 px-5 sm:px-8">
+                <Link href="/" className="shrink-0 font-bold tracking-tight">
+                    Beenslab
                 </Link>
 
-                <div className="flex flex-nowrap gap-8 items-center">
+                <nav className="hidden flex-1 items-center gap-6 sm:flex" aria-label="주요 메뉴">
+                    <Nav type="normal" categories={categories} />
+                </nav>
+
+                <div className="flex shrink-0 items-center gap-4">
                     <DarkModeButton />
+                    {/* 로그인 버튼은 방문자에게 보일 이유가 없다. /admin으로 가면
+                        proxy가 로그인 화면으로 보낸다. 로그아웃만 노출한다. */}
+                    {isLoggedIn && (
+                        <button
+                            type="button"
+                            onClick={handleLogout}
+                            className="text-xs text-ink-muted hover:text-brand-600"
+                        >
+                            Logout
+                        </button>
+                    )}
                     <button
                         type="button"
-                        className="m-0 p-0 sm:hidden"
+                        className="sm:hidden"
                         onClick={() => setIsMenuOpen((prev) => !prev)}
                         aria-label={isMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
                         aria-expanded={isMenuOpen}
@@ -86,7 +97,7 @@ export default function Header() {
                             viewBox="0 0 24 24"
                             strokeWidth={1.5}
                             stroke="currentColor"
-                            className="w-7 h-7 transition duration-500 stroke-black dark:stroke-white"
+                            className="h-6 w-6"
                             aria-hidden="true"
                         >
                             {isMenuOpen ? (
@@ -104,25 +115,18 @@ export default function Header() {
                             )}
                         </svg>
                     </button>
-                    <div className="flex-nowrap items-center justify-center gap-5 text-center hidden sm:flex">
-                        <Nav type="normal" />
-                        <button
-                            className="ml-10 text-xs"
-                            onClick={isLoggedIn ? handleLogout : handleLogin}
-                        >
-                            {isLoggedIn ? 'Logout' : 'Login'}
-                        </button>
-                    </div>
                 </div>
             </div>
-            <div
+
+            <nav
                 id="mobile-nav"
-                className={`w-full h-screen absolute top-20 left-0 bg-white dark:bg-[#111111] flex-col flex-nowrap p-5 sm:hidden ${
+                aria-label="모바일 메뉴"
+                className={`absolute top-16 left-0 h-screen w-full flex-col bg-surface px-5 pt-4 sm:hidden ${
                     isMenuOpen ? 'flex' : 'hidden'
                 }`}
             >
-                <Nav type="toggle" onClick={() => setIsMenuOpen(false)} />
-            </div>
+                <Nav type="toggle" categories={categories} onClick={() => setIsMenuOpen(false)} />
+            </nav>
         </header>
     );
 }

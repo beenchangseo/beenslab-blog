@@ -26,22 +26,64 @@
     from 180deg at 50% 50%,
     var(--tw-gradient-stops)
   );
+
+  /* 컨테이너 폭. Layout은 더 이상 폭을 정하지 않고 페이지가 고른다.
+     max-w-reading / max-w-page 로 쓴다. */
+  --container-reading: 46rem; /* 본문: 한 줄 40~50자 */
+  --container-page: 72rem; /* 목록/카드 그리드 */
+
+  /* 강조색. 링크와 버튼, 카테고리 활성 상태에 쓴다. */
+  --color-brand-50: oklch(0.97 0.017 254);
+  --color-brand-100: oklch(0.93 0.04 254);
+  --color-brand-500: oklch(0.62 0.18 254);
+  --color-brand-600: oklch(0.55 0.19 254);
+  --color-brand-700: oklch(0.48 0.17 254);
+
+  /* 의미 기반 색. 아래 @layer base에서 다크 모드 값으로 갈아끼우므로
+     컴포넌트에서 dark: 변형을 따로 쓸 필요가 없다. */
+  --color-surface: oklch(1 0 0);
+  --color-surface-subtle: oklch(0.975 0.002 254);
+  --color-ink: oklch(0.21 0.01 254);
+  --color-ink-muted: oklch(0.52 0.012 254);
+  --color-line: oklch(0.92 0.004 254);
 }
 
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
+  /*
+    Tailwind v4에서 기본 border 색이 currentcolor로 바뀌어서, 색을 지정하지
+    않은 border가 글자색을 따라간다. v3 때처럼 보이도록 되돌린다.
+    (주로 src/components/career/* 가 여기에 기댄다)
+  */
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-line, currentcolor);
   }
+
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+}
+
+/*
+  다크 모드 토큰. 일부러 @layer 밖에 둔다.
+
+  Tailwind의 @theme은 `:root,:host`로 값을 내보내고 그게 theme 레이어에
+  들어간다. 그런데 이 파일의 @layer base 블록이 결과 CSS에서 theme보다
+  먼저 나타나는 바람에 base가 더 낮은 우선순위를 갖게 됐고, 그 안에 두면
+  특정도를 올려도(:root.dark) theme의 흰색에 계속 밀렸다.
+  레이어에 속하지 않은 규칙은 모든 레이어를 이기므로 여기서 끝낸다.
+*/
+:root.dark {
+  --color-surface: oklch(0.17 0.006 254);
+  --color-surface-subtle: oklch(0.22 0.008 254);
+  --color-ink: oklch(0.96 0.002 254);
+  --color-ink-muted: oklch(0.7 0.012 254);
+  --color-line: oklch(0.3 0.008 254);
+  --color-brand-500: oklch(0.7 0.16 254);
+  --color-brand-600: oklch(0.75 0.15 254);
 }

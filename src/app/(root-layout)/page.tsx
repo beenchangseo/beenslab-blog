@@ -1,6 +1,12 @@
 import {Metadata} from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import {getAllPosts, getCategories} from '@/lib/posts';
+import Container from '@/components/layout/Container';
+import PostGrid from '@/components/blog/PostGrid';
+import {getPostThumbnail} from '@/lib/postImage';
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
     title: 'ChangBeen Seo - 백엔드 개발자',
@@ -28,67 +34,149 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Home() {
+export default async function Home() {
+    const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
+
+    const latest = posts.slice(0, 6);
+    // 글이 19개뿐이라 메모리에서 정렬한다. 많아지면 쿼리로 옮길 것.
+    const popular = [...posts].sort((a, b) => b.view_count - a.view_count).slice(0, 3);
+
+    // 시리즈별로 묶어 편 순서대로 세운다.
+    const seriesMap = new Map<string, {title: string; posts: typeof posts}>();
+    for (const post of posts) {
+        if (!post.series) continue;
+        const entry = seriesMap.get(post.series.slug) ?? {title: post.series.title, posts: []};
+        entry.posts.push(post);
+        seriesMap.set(post.series.slug, entry);
+    }
+    const seriesList = [...seriesMap.values()].map((s) => ({
+        ...s,
+        posts: [...s.posts].sort((a, b) => (a.series?.order ?? 0) - (b.series?.order ?? 0)),
+    }));
+
     return (
         <>
-            <section className="min-h-[60vh] flex flex-col items-center justify-center my-16">
-                <div className="flex flex-col items-center text-center gap-6">
+            <Container className="py-14 sm:py-20">
+                <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-8 sm:text-left">
                     <Image
                         src="/images/profile.jpeg"
                         alt="서창빈 프로필 사진"
-                        width={180}
-                        height={180}
-                        // 원본이 정사각형이 아니라서 object-cover가 없으면 눌려 보인다.
-                        className="rounded-full shadow-lg object-cover"
-                        priority={true}
-                        style={{width: 180, height: 180}}
+                        width={96}
+                        height={96}
+                        priority
+                        className="size-24 shrink-0 rounded-full object-cover shadow-md"
                     />
                     <div>
-                        <h1 className="font-bold text-4xl sm:text-6xl font-mono mb-4 bg-linear-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 bg-clip-text text-transparent">
-                            ChangBeen Seo
-                        </h1>
-                        <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 font-medium leading-relaxed max-w-2xl">
-                            더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다.
+                        <h1 className="text-3xl font-bold sm:text-4xl">ChangBeen Seo</h1>
+                        <p className="mt-2 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
+                            더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다. 실제
+                            운영에서 겪은 성능 문제와 장애 대응을 기록합니다.
                         </p>
                     </div>
                 </div>
-            </section>
+            </Container>
 
-            <section className="max-w-3xl mx-auto mb-16 px-4">
-                <div className="bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-10 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
-                    <div className="flex items-start gap-4 mb-6">
-                        <span className="text-5xl">✍️</span>
-                        <div>
-                            <h2 className="font-bold text-3xl mb-3 text-gray-900 dark:text-white">
-                                개발 여정의 기록
-                            </h2>
-                            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                                이 블로그는 제 아이디어와 여정의 흔적을 기록한 공간입니다.
-                            </p>
-                            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
-                                기술과 경험, 그리고 삶 속에서 얻은 통찰을 나누며 더 큰 세상을
-                                만들어가고자 합니다.
-                            </p>
-                        </div>
+            <Container className="pb-16">
+                <SectionHeading title="최신 글" href="/blog" linkLabel="전체 보기" />
+                <PostGrid posts={latest} categories={categories} />
+            </Container>
+
+            {popular.some((post) => post.view_count > 0) && (
+                <section className="bg-surface-subtle py-16">
+                    <Container>
+                        <SectionHeading title="많이 본 글" />
+                        <ol className="flex flex-col gap-1">
+                            {popular.map((post, index) => (
+                                <li key={post.id}>
+                                    <Link
+                                        href={`/blog/post/${post.slug}`}
+                                        className="flex items-baseline gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
+                                    >
+                                        <span className="text-xl font-bold tabular-nums text-brand-500">
+                                            {index + 1}
+                                        </span>
+                                        <span className="flex-1">
+                                            <span className="block font-semibold">
+                                                {post.title}
+                                            </span>
+                                            <span className="mt-1 line-clamp-1 block text-sm text-ink-muted">
+                                                {post.description}
+                                            </span>
+                                        </span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ol>
+                    </Container>
+                </section>
+            )}
+
+            {seriesList.length > 0 && (
+                <Container className="py-16">
+                    <SectionHeading title="시리즈" />
+                    <div className="flex flex-col gap-8">
+                        {seriesList.map((series) => (
+                            <div
+                                key={series.title}
+                                className="rounded-2xl border border-line p-6 sm:p-8"
+                            >
+                                <h3 className="text-xl font-bold">{series.title}</h3>
+                                <ol className="mt-5 grid gap-5 sm:grid-cols-2">
+                                    {series.posts.map((post) => (
+                                        <li key={post.id} className="flex gap-4">
+                                            <Link
+                                                href={`/blog/post/${post.slug}`}
+                                                className="shrink-0 overflow-hidden rounded-lg border border-line focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
+                                            >
+                                                <Image
+                                                    src={getPostThumbnail(post)}
+                                                    alt=""
+                                                    width={1200}
+                                                    height={630}
+                                                    sizes="128px"
+                                                    className="aspect-[1200/630] w-32 object-cover"
+                                                />
+                                            </Link>
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-ink-muted">
+                                                    {post.series?.order}편
+                                                </p>
+                                                <Link
+                                                    href={`/blog/post/${post.slug}`}
+                                                    className="mt-1 line-clamp-2 block font-semibold hover:text-brand-600"
+                                                >
+                                                    {post.title}
+                                                </Link>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                        ))}
                     </div>
-                    <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
-                        <Link
-                            href="/blog"
-                            className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-md"
-                        >
-                            블로그 보기
-                            <span>→</span>
-                        </Link>
-                        <Link
-                            href="/career"
-                            className="inline-flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-md"
-                        >
-                            이력서 보기
-                            <span>→</span>
-                        </Link>
-                    </div>
-                </div>
-            </section>
+                </Container>
+            )}
         </>
+    );
+}
+
+function SectionHeading({
+    title,
+    href,
+    linkLabel,
+}: {
+    title: string;
+    href?: string;
+    linkLabel?: string;
+}) {
+    return (
+        <div className="mb-8 flex items-baseline justify-between">
+            <h2 className="text-2xl font-bold">{title}</h2>
+            {href && linkLabel && (
+                <Link href={href} className="text-sm font-semibold text-brand-600 hover:underline">
+                    {linkLabel} →
+                </Link>
+            )}
+        </div>
     );
 }

@@ -81,7 +81,7 @@ export default function BlogPost({
                     {categories.map((category) => (
                         <Link
                             key={category}
-                            href={`/category?filter=${encodeURIComponent(category)}`}
+                            href={`/category/${category}`}
                             className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
                         >
                             {category}

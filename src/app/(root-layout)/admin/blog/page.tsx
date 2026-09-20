@@ -1,13 +1,14 @@
 import {getAllPostsForAdmin} from '@/lib/posts';
 import BlogSearch from '../../../../components/BlogSearch';
 import Link from 'next/link';
+import Container from '@/components/layout/Container';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBlogPage() {
     const posts = await getAllPostsForAdmin();
     return (
-        <div>
+        <Container className="py-12">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">블로그 관리</h1>
                 <Link
@@ -18,6 +19,6 @@ export default async function AdminBlogPage() {
                 </Link>
             </div>
             <BlogSearch posts={posts} showAdminButtons={true} />
-        </div>
+        </Container>
     );
 }

@@ -1,6 +1,7 @@
 import {Metadata} from 'next';
-import {getAllPosts} from '@/lib/posts';
-import BlogSearch from '../../../components/BlogSearch';
+import {getAllPosts, getCategories} from '@/lib/posts';
+import PostSearch from '@/components/blog/PostSearch';
+import Container from '@/components/layout/Container';
 
 export const revalidate = 3600;
 
@@ -41,6 +42,17 @@ export const metadata: Metadata = {
 };
 
 export default async function Blog() {
-    const posts = await getAllPosts();
-    return <BlogSearch posts={posts} />;
+    const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
+
+    return (
+        <Container className="py-12 sm:py-16">
+            <header className="mb-10">
+                <h1 className="text-3xl font-bold sm:text-4xl">글</h1>
+                <p className="mt-2 text-ink-muted">
+                    백엔드, 데이터베이스, 인프라에서 겪은 것들을 기록합니다.
+                </p>
+            </header>
+            <PostSearch posts={posts} categories={categories} />
+        </Container>
+    );
 }

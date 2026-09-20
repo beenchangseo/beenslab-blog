@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-import {getAllPosts} from '@/lib/posts';
+import {getAllPosts, getCategories} from '@/lib/posts';
 
 export const revalidate = 3600;
 
@@ -7,12 +7,23 @@ export async function GET() {
     try {
         const base = 'https://blog.beenslab.com';
 
-        const posts = await getAllPosts();
+        const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
 
         const mostRecentPostUpdate =
             posts.length > 0
                 ? new Date(Math.max(...posts.map((p) => new Date(p.update_time).getTime())))
                 : new Date();
+
+        const categoryUrls = categories
+            .map(
+                (c) => `  <url>
+    <loc>${base}/category/${c.keyword}</loc>
+    <lastmod>${mostRecentPostUpdate.toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`,
+            )
+            .join('\n');
 
         const postUrls = posts
             .map(
@@ -51,6 +62,7 @@ export async function GET() {
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+${categoryUrls}
 ${postUrls}
 </urlset>`;
 

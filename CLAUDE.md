@@ -62,7 +62,7 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 - `/admin/blog`는 최신 목록이 필요해서 `force-dynamic`이다. API 라우트(`/api/blog/posts`, `/api/categories` 등)는 관리자 에디터가 클라이언트에서 호출한다.
 - 게시글의 `categories`는 카테고리 **keyword** 문자열 배열이다(id/title 아님). 필터링은 keyword로 하고, 표시용 title은 `getCategories()` 결과로 매핑하며, 에디터는 keyword→id로 바꿔 액션에 `categoryIds`를 넘긴다.
 - 카테고리는 2026-09에 8개(Javascript/AWS/PostgreSQL 같은 기술 스택 라벨)에서 기술 영역 기준 **4개**(`backend`/`database`/`infra`/`etc`)로 재편했다. 원래 keyword는 각 글의 `tags`로 옮겨서 보존돼 있다(`other`만 정보가 없어 버렸다). 매핑은 `prisma/migrations/20260920020000_reorganize_categories`에 slug로 박혀 있다.
-- `/category`는 필터 쿼리를 읽는 `CategoryFilterFromSearchParams`(`useSearchParams`)를 `<Suspense>`로 감싸고, 필터 없는 `CategoryFilter`를 fallback으로 넘긴다. 정적 렌더링 때는 이 fallback이 HTML에 들어가므로, fallback을 비우면 `/category`의 HTML 본문이 사라진다.
+- 카테고리는 쿼리가 아니라 **실제 경로**다(`/category/[keyword]`). 예전의 `?filter=` 방식은 `useSearchParams` 때문에 정적 렌더링에서 빠졌고, 헤더 네비에 쓰면 모든 페이지가 같이 빠진다. `/category?filter=x`로 들어오면 `/category/x`로 리다이렉트한다.
 
 ### 쓰기 경로: Server Actions (`src/app/actions/`)
 
@@ -116,6 +116,9 @@ npm run migrate:status                 # 확인
 
 ### 스타일
 
+- 폭은 `Layout`이 아니라 각 페이지가 `Container`(`src/components/layout/Container.tsx`)로 정한다. 목록은 `page`(72rem), 본문은 `reading`(46rem). 예전에는 `Layout`이 전부 768px로 묶어서 카드 그리드를 못 넣었고 career 페이지의 `max-w-5xl`도 무시됐다.
+- 색은 의미 기반 토큰을 쓴다(`bg-surface`, `text-ink`, `text-ink-muted`, `border-line`, `text-brand-600`). 컴포넌트에 `dark:` 변형을 다시 쓰지 말 것. 다크 모드는 토큰 값만 바꾼다.
+- **다크 모드 토큰 블록은 일부러 `@layer` 밖에 있다.** 이 파일의 `@layer base`가 빌드 결과에서 Tailwind의 `theme` 레이어보다 먼저 나타나 우선순위가 더 낮아지는 바람에, 안에 두면 `:root.dark`로 특정도를 올려도 `@theme`이 내보내는 `:root,:host`의 밝은 값에 계속 밀린다(다크 모드가 통째로 안 먹힘). 레이어 밖 규칙이 모든 레이어를 이기므로 거기서 끝낸다.
 - Tailwind CSS 4다. **설정 파일(`tailwind.config.ts`)이 없다.** 폰트 스택·커스텀 값은 `src/app/globals.css`의 `@theme` 블록에, 플러그인은 `@plugin "@tailwindcss/typography";`로 선언한다. v4는 JS 설정을 자동으로 찾지 않으므로 플러그인 줄을 빠뜨리면 본문 `prose` 스타일이 통째로 사라진다.
 - `globals.css`의 `@import`는 반드시 맨 위에 둘 것. Turbopack CSS 파서가 순서를 어기면 빌드를 실패시킨다.
 - v3의 기본 border 색(`gray-200`)을 유지하려고 `globals.css` 하단에 호환 레이어를 둔다. 색을 지정하지 않은 `border` 클래스들이 여기에 의존한다(주로 `src/components/career/*`).
