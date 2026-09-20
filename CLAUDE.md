@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 개인 기술 블로그 + 이력서 사이트 (https://blog.beenslab.com). Next.js 16.3 App Router(React 19, Turbopack) + Prisma 6(PostgreSQL), Tailwind CSS 4, Vercel 배포. 게시글/카테고리는 DB에 저장되고 `/admin`의 마크다운 에디터로 작성한다. `README.md`는 create-next-app 기본 템플릿이라 참고할 내용이 없다(포트도 실제와 다름).
 
-DB는 Oracle Cloud 춘천 리전 VM에 직접 띄운 PostgreSQL이다. Vercel 함수 리전은 대시보드 설정으로 `icn1`(서울)이다(`vercel.json` 없음, 새 프로젝트 기본값은 `iad1`). 캐시되지 않은 렌더링(ISR 재생성, API 라우트, 관리자 페이지)은 DB를 거치므로 함수 리전과 DB는 같은 지역에 있어야 한다. DNS는 Cloudflare에서 관리하지만 `blog` 레코드는 프록시를 끈 상태(DNS only)로 둔다. 프록시를 켜면 한국 방문자가 Cloudflare LA를 거쳐 응답이 약 0.7초 느려진다(2026-09 측정).
+DB는 Oracle Cloud 춘천 리전 VM에 도커로 띄운 PostgreSQL 16이다(`postgres:16-alpine`, 컨테이너 이름 `postgres`). 같은 인스턴스에 `emotion_tree` DB도 있으니 서버 전역 설정을 바꿀 때 주의할 것. Vercel 함수 리전은 대시보드 설정으로 `icn1`(서울)이다(`vercel.json` 없음, 새 프로젝트 기본값은 `iad1`). 캐시되지 않은 렌더링(ISR 재생성, API 라우트, 관리자 페이지)은 DB를 거치므로 함수 리전과 DB는 같은 지역에 있어야 한다. DNS는 Cloudflare에서 관리하지만 `blog` 레코드는 프록시를 끈 상태(DNS only)로 둔다. 프록시를 켜면 한국 방문자가 Cloudflare LA를 거쳐 응답이 약 0.7초 느려진다(2026-09 측정).
 
 ## 명령어
 
@@ -119,7 +119,11 @@ npm run migrate:status                 # 확인
 - Prisma가 생성한 원본 베이스라인은 `CREATE SCHEMA "public"`이었는데 `"blog"`로 고쳤다. 안 고치면 빈 DB에서 "no schema has been selected to create in"으로 실패한다.
 - 백업은 저장소 밖(`~/beenslab-blog-backups/`)에 둔다. 게시글 본문이 들어있어 git에 들어가면 안 된다.
 - **SQL로 데이터를 직접 바꾸면 Next 캐시는 그대로다.** Server Action을 거칠 때와 달리 `revalidatePath`가 불리지 않아, 배포 후에도 ISR 캐시가 만료될 때까지(최대 1시간) 옛 내용이 섞여 보인다. 2026-09 카테고리 재편 때 글 페이지 일부가 옛 카테고리를 그대로 보여줬다. 급하면 해당 페이지를 한 번씩 열어 재생성시키거나 재배포할 것.
-- 접속이 `sslmode=disable`이다. 자격증명과 데이터가 공용 인터넷 구간을 평문으로 지난다. VM에 인증서를 붙이고 `sslmode=require`로 바꾸는 게 맞다(미처리).
+- 접속은 `sslmode=require`다(2026-09-21). VM의 PostgreSQL에 자체 서명 인증서를 넣고 `ALTER SYSTEM SET ssl = on` + reload로 켰다. 인증서는 `<PGDATA>/server.crt`, `server.key`이고 **키는 반드시 `0600` + `postgres`(uid 70) 소유**여야 한다. 아니면 PostgreSQL이 SSL 활성화를 거부한다.
+- `ssl` 파라미터는 SIGHUP으로 바뀐다. 재시작이 필요 없고 `ALTER SYSTEM RESET ssl` + reload로 즉시 되돌릴 수 있다.
+- **`sslmode=require`는 암호화만 하고 서버 신원은 검증하지 않는다.** 도청은 막지만 적극적 중간자는 남는다. 인증서 SAN에 IP를 넣어뒀으니 나중에 `verify-full`로 갈 수는 있는데, CA 인증서를 Vercel까지 배포해야 한다.
+- **평문 접속은 아직 열려 있다.** `pg_hba.conf` 마지막 줄이 `host all all all scram-sha-256`이다. `hostssl`로 바꾸면 TLS를 강제할 수 있지만, **같은 인스턴스에 `emotion_tree` DB가 함께 있어서** 그쪽 앱까지 TLS로 붙어야 한다. 확인 전에는 바꾸지 말 것.
+- 5432 포트가 공용 인터넷에 열려 있고, 로그에 `postgres`/`keycloak` 계정으로 들어오는 인증 실패 시도가 찍힌다. Vercel Hobby는 고정 IP가 없어 방화벽으로 좁히기 어렵다.
 
 ### 인증
 
