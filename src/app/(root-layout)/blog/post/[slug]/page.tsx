@@ -1,6 +1,11 @@
 import {Mdx} from '../../../../../components/Mdx';
 import {getAllPosts, getCategories, getPostBySlug, getSlugRedirect} from '@/lib/posts';
 import Container from '@/components/layout/Container';
+import TableOfContents from '@/components/blog/TableOfContents';
+import ShareButtons from '@/components/blog/ShareButtons';
+import PostCard from '@/components/blog/PostCard';
+import Comments from '@/components/blog/Comments';
+import {extractHeadings} from '@/lib/toc';
 import Link from 'next/link';
 import Image from 'next/image';
 import {Metadata} from 'next';
@@ -81,6 +86,19 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
     const index = siblings.findIndex((p) => p.slug === post.slug);
     const prev = index > 0 ? siblings[index - 1] : null;
     const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
+
+    const headings = extractHeadings(post.contents);
+    const postUrl = `https://blog.beenslab.com/blog/post/${params.slug}`;
+
+    // 같은 카테고리의 다른 글. 한 편 읽고 그대로 떠나지 않게 이어 붙인다.
+    const allPosts = await getAllPosts();
+    const related = allPosts
+        .filter(
+            (p) =>
+                p.slug !== post.slug &&
+                p.categories.some((keyword) => post.categories.includes(keyword)),
+        )
+        .slice(0, 3);
 
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
@@ -229,7 +247,13 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                     <div className="prose dark:prose-invert max-w-none">
                         <Mdx markdown={post.contents} />
                     </div>
+
+                    <div className="mt-12 border-t border-line pt-8">
+                        <ShareButtons url={postUrl} title={post.title} />
+                    </div>
                 </article>
+
+                <TableOfContents headings={headings} />
 
                 {(prev || next) && (
                     <nav
@@ -257,6 +281,19 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                             </Link>
                         )}
                     </nav>
+                )}
+
+                <Comments />
+
+                {related.length > 0 && (
+                    <section className="mt-16 border-t border-line pt-10">
+                        <h2 className="mb-8 text-xl font-bold">함께 읽으면 좋은 글</h2>
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-3">
+                            {related.map((item) => (
+                                <PostCard key={item.id} post={item} categories={categories} />
+                            ))}
+                        </div>
+                    </section>
                 )}
             </Container>
         </>

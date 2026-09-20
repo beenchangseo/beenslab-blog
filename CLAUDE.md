@@ -74,6 +74,9 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 - `post.view_count`는 목록 정렬용 사본이다. 실시간 카운팅은 여전히 Redis가 하고 `npm run sync:views`로 주기적으로 옮긴다(로컬 `.env`의 KV 값은 placeholder라 실제 자격증명이 있는 곳에서 돌려야 한다).
 - **한글은 NFC로 저장한다.** macOS에서 복사한 텍스트는 자모가 분리된 NFD로 들어오는데, 브라우저는 합쳐서 보여주지만 커버 이미지를 그리는 Satori는 자모 블록(U+1100~U+11FF) 글리프를 못 찾아 제목 전체를 두부(□)로 렌더한다. Server Action이 저장 직전에 `normalize('NFC')`를 건다. 2026-09에 제목 1건·본문 1건이 NFD 상태였고 마이그레이션으로 정리했다.
 - 본문은 `post.contents`에 Markdown으로 저장된다. `src/components/Mdx.tsx`는 이름과 달리 MDX가 아니라 `react-markdown` + `remark-gfm` + `rehype-highlight`이고, 본문의 raw HTML은 렌더링되지 않고 텍스트로 보인다(코드 하이라이트 테마는 `globals.css`의 highlight.js import). 게시글용 이미지는 `public/images/`에 커밋해서 정적 파일로 제공한다.
+- 본문 제목에는 `src/lib/toc.ts`가 id를 붙이고 목차(`TableOfContents`)가 같은 id로 링크한다. **양쪽이 `createHeadingIdFactory()`를 같은 순서로 호출해야 id가 맞는다** — 한쪽만 고치면 앵커가 어긋난다. 본문 `h1`은 h2로 내려서 렌더한다(페이지 제목이 이미 h1이다).
+- RSS 자동발견 `<link>`는 루트 layout의 `<head>`에 직접 박혀 있다. `metadata.alternates.types`에 넣으면 각 페이지가 `alternates.canonical`을 정의하는 순간 통째로 덮인다(OG 이미지와 같은 얕은 병합 문제).
+- 댓글은 giscus다. `NEXT_PUBLIC_GISCUS_*` 네 개가 모두 있어야 켜지고 하나라도 비면 아무것도 그리지 않는다. `NEXT_PUBLIC_*`은 빌드 때 박히므로 값을 넣은 뒤 재배포해야 한다.
 - 마크다운 `![](...)`에는 크기 정보가 없어 그냥 두면 원본을 통째로 받고 레이아웃도 밀린다. `Mdx.tsx`가 `img`를 가로채 `src/lib/imageSize.ts`로 PNG/JPEG 헤더에서 실제 크기를 읽고 `next/image`에 넘긴다(의존성 없이 직접 파싱, `public/` 밖 경로와 외부 URL은 null 반환). 새 이미지 포맷을 쓰려면 이 파서에 추가해야 한다.
 - 테이블은 snake_case(`@@map`)이고, `OauthClient` 모델은 쓰지 않는다(이전 OAuth 연동 잔재).
 

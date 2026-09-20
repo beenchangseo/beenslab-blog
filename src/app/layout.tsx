@@ -29,6 +29,14 @@ export default async function RootLayout({
     return (
         <html lang="ko" suppressHydrationWarning={true}>
             <head>
+                {/* metadata.alternates.types에 넣으면 각 페이지가 alternates.canonical을
+                    정의하는 순간 통째로 덮인다(Next의 얕은 병합). 여기서 직접 넣는다. */}
+                <link
+                    rel="alternate"
+                    type="application/rss+xml"
+                    title="Beenslab Blog"
+                    href="/rss.xml"
+                />
                 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
                 <link rel="stylesheet" href={PRETENDARD_CSS} crossOrigin="anonymous" />
             </head>

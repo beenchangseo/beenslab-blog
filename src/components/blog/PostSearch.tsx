@@ -9,8 +9,11 @@ type Props = {
     categories: GetCategoryResponseDto[];
 };
 
+const PAGE_SIZE = 12;
+
 export default function PostSearch({posts, categories}: Props) {
     const [query, setQuery] = useState('');
+    const [visible, setVisible] = useState(PAGE_SIZE);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -23,7 +26,15 @@ export default function PostSearch({posts, categories}: Props) {
         );
     }, [posts, query]);
 
-    const handleSearch = (e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value);
+    const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+        setQuery(e.target.value);
+        setVisible(PAGE_SIZE);
+    };
+
+    // 진짜 페이지네이션(서버에서 잘라 내려주기)은 검색도 서버로 옮긴 뒤에
+    // 해야 의미가 있다. 지금은 화면에 그리는 개수만 끊는다.
+    const shown = filtered.slice(0, visible);
+    const remaining = filtered.length - shown.length;
 
     return (
         <>
@@ -56,7 +67,19 @@ export default function PostSearch({posts, categories}: Props) {
                 )}
             </div>
 
-            <PostGrid posts={filtered} categories={categories} />
+            <PostGrid posts={shown} categories={categories} />
+
+            {remaining > 0 && (
+                <div className="mt-12 flex justify-center">
+                    <button
+                        type="button"
+                        onClick={() => setVisible((n) => n + PAGE_SIZE)}
+                        className="rounded-xl border border-line px-6 py-3 text-sm font-semibold transition-colors hover:border-brand-500 hover:text-brand-600 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
+                    >
+                        {remaining}개 더 보기
+                    </button>
+                </div>
+            )}
         </>
     );
 }
