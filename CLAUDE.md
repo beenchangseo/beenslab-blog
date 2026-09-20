@@ -44,7 +44,8 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 
 ## 환경변수 (`.env-example`)
 
-- `DATABASE_URL`: PostgreSQL (`pgcrypto` 확장 사용)
+- `DATABASE_URL`: 런타임용. **DDL 권한이 없는 앱 전용 롤 `beenslab_app`**으로 붙는다.
+- `DIRECT_URL`: 마이그레이션 전용. 테이블 소유자 `postgres`가 필요하다. **로컬에만 두고 Vercel에는 넣지 않는다**(운영에서 마이그레이션을 돌리지 않으며, `prisma generate`는 이 값 없이도 동작한다).
 - `JWT_SECRET`: 미설정 시 `src/lib/auth.ts`가 하드코딩된 placeholder 키로 서명한다
 - `KV_REST_API_URL`, `KV_REST_API_TOKEN`: 조회수 카운터용 Upstash Redis. Vercel Marketplace 리소스 `beenslab-blog-hits`(도쿄 `hnd1`, free 플랜, autoUpgrade 끔)가 주입하고, `src/lib/redis.ts`의 `Redis.fromEnv()`가 읽는다. 같이 주입되는 `KV_URL`, `KV_REST_API_READ_ONLY_TOKEN`, `REDIS_URL`은 쓰지 않는다.
 - 카운터가 4초쯤 걸린 뒤 500을 내면 Redis 주소에 연결이 안 되는 상황이다. 연결된 리소스가 삭제됐는지 `vercel integration list <project>`로 확인할 것(2026-09에 이전 리소스가 Uninstalled 상태로 방치돼 이 증상이 있었다).
@@ -85,7 +86,23 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 
 ### 데이터베이스와 마이그레이션
 
-Oracle Cloud 춘천 VM의 PostgreSQL 16. **테이블은 `public`이 아니라 `blog` 스키마에 있고**, 접속 문자열의 `?schema=blog`가 `search_path`를 잡아준다. `pgcrypto`도 `blog` 스키마에 설치돼 있다.
+Oracle Cloud 춘천 VM의 PostgreSQL 16.
+
+**권한이 둘로 나뉜다.** 앱은 `beenslab_app` 롤로 붙고 SELECT/INSERT/UPDATE/DELETE만 할 수 있다. DROP·ALTER·CREATE, `pg_read_file`, 롤 생성, `_prisma_migrations` 접근은 전부 막혀 있다. 마이그레이션만 `DIRECT_URL`의 `postgres`로 돈다. 새 테이블은 `ALTER DEFAULT PRIVILEGES`로 권한이 자동으로 붙으므로 마이그레이션 후 따로 GRANT할 필요가 없다.
+
+롤을 다시 만들어야 하면(새 DB 등):
+
+```sql
+CREATE ROLE beenslab_app LOGIN PASSWORD '...' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+GRANT CONNECT ON DATABASE beenslab TO beenslab_app;
+GRANT USAGE ON SCHEMA blog TO beenslab_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA blog TO beenslab_app;
+REVOKE ALL ON TABLE blog._prisma_migrations FROM beenslab_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA blog
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO beenslab_app;
+```
+
+**테이블은 `public`이 아니라 `blog` 스키마에 있고**, 접속 문자열의 `?schema=blog`가 `search_path`를 잡아준다. `pgcrypto`도 `blog` 스키마에 설치돼 있다.
 
 **`prisma migrate dev`를 쓰지 말 것.** 로컬 개발과 프로덕션이 DB 하나를 공유하므로, `migrate dev`는 운영 데이터에 바로 적용되고 드리프트를 감지하면 리셋을 제안한다. 대신 이 흐름을 쓴다:
 

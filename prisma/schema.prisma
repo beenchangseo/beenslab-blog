@@ -5,7 +5,10 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
+  // 런타임은 DDL 권한이 없는 앱 전용 롤로 붙는다.
   url        = env("DATABASE_URL")
+  // 마이그레이션만 테이블 소유자(postgres)로 붙는다. 로컬에서만 필요하다.
+  directUrl  = env("DIRECT_URL")
   extensions = [pgcrypto, pg_trgm]
 }
 
