@@ -46,7 +46,6 @@ export async function generateMetadata(props: {
             description: post.description,
             url,
             type: 'article',
-            images: [{url: '/opengraph-image', width: 1200, height: 630, alt: post.title}],
             publishedTime: post.published_at ?? post.create_time,
             modifiedTime: post.update_time,
             authors: ['ChangBeen Seo'],
@@ -54,7 +53,6 @@ export async function generateMetadata(props: {
         },
         twitter: {
             card: 'summary_large_image',
-            images: ['/twitter-image'],
             title: post.title,
             description: post.description,
             creator: '@beenchangseo',

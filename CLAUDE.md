@@ -110,7 +110,8 @@ npm run migrate:status                 # 확인
 - 조회수: 게시글 페이지가 `/api/blog/count?post_id={slug}&domain=blog.beenslab.com`을 `<Image unoptimized>`로 렌더하면, 이 라우트가 `blog-hits:{domain}:{slug}:total`과 `...:{KST 날짜}`(48시간 TTL) 키를 `INCR` 파이프라인으로 올리고 SVG 배지를 반환한다. `domain`은 `blog.beenslab.com`만, `post_id`는 slug 형식만 허용한다. Edge 런타임은 프로젝트 리전 설정을 따르지 않아 `sin1`(싱가포르)에서 실행됐기 때문에, Node 런타임으로 두어 `icn1`에서 실행되게 한다.
 - `/career`는 DB와 무관한 클라이언트 페이지이고 내용은 전부 `src/data/career.ts`에 있다(메타데이터는 `career/layout.tsx`).
 - SEO: 각 페이지가 `metadata`/`generateMetadata`에 canonical·OpenGraph·Twitter를 직접 정의하고, 게시글 페이지는 JSON-LD를 넣는다. 도메인 `https://blog.beenslab.com`이 metadata·JSON-LD·`robots.ts`·sitemap에 하드코딩돼 있다(`src/types/constants.ts`의 `BASE_URL`은 root layout 메타데이터에서만 쓴다).
-- OG 이미지는 `src/app/opengraph-image.tsx`/`twitter-image.tsx`가 1200×630으로 생성한다(한글도 정상 렌더). **각 페이지는 `images: [{url: '/opengraph-image', ...}]`로 이 라우트를 직접 가리켜야 한다.** Next는 메타데이터를 얕게 병합해서, 자식 세그먼트가 `openGraph`를 정의하면 루트의 파일 컨벤션 이미지까지 통째로 사라진다. 새 페이지를 만들 때 빠뜨리기 쉬우니 주의.
+- OG 이미지는 `src/app/opengraph-image.tsx`/`twitter-image.tsx`가 1200×630으로 생성한다(한글도 정상 렌더). **각 페이지는 `images: [{url: '/opengraph-image', ...}]`로 이 라우트를 직접 가리켜야 한다.** Next는 메타데이터를 얕게 병합해서, 자식 세그먼트가 `openGraph`를 정의하면 루트의 파일 컨벤션 이미지까지 통째로 사라진다. 단 **같은 세그먼트**에 둔 파일은 자동 적용된다(글 페이지가 그 경우라 명시 지정을 뺐다).
+- 글 커버는 `src/lib/postCover.tsx`가 제목·카테고리로 그린다. 진입점이 둘이다: `opengraph-image.tsx`(공유용)와 `cover/route.ts`(목록 썸네일용). **파일 컨벤션 쪽 URL에는 빌드마다 바뀌는 해시가 붙어서**(`/opengraph-image-3kwzem`) 코드에서 링크할 수 없기 때문에 고정 주소를 따로 둔 것이다. UI에서는 `getPostThumbnail()`(`src/lib/postImage.ts`)을 쓰면 `cover_image` 유무에 따라 알아서 고른다.
 - 레이아웃에서 페이지 전체를 `<Suspense>`로 감싸지 말 것. 예전에 루트 layout이 그렇게 되어 있어서, 없는 글이나 DB 장애 같은 렌더 에러가 HTTP 200 + 빈 body(soft 404)로 응답됐다. 지금은 없는 글이면 `notFound()`로 404, 렌더 에러면 500이 나간다.
 
 ### 스타일
