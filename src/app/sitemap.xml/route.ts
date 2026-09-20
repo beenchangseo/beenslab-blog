@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-import {getAllPosts, getCategories} from '@/lib/posts';
+import {getAllPosts, getCategories, POSTS_PER_PAGE} from '@/lib/posts';
 
 export const revalidate = 3600;
 
@@ -13,6 +13,19 @@ export async function GET() {
             posts.length > 0
                 ? new Date(Math.max(...posts.map((p) => new Date(p.update_time).getTime())))
                 : new Date();
+
+        // 2페이지부터의 목록도 색인 대상이다(1페이지는 위의 /blog가 담당).
+        const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+        const pageUrls = Array.from({length: Math.max(0, totalPages - 1)}, (_, i) => i + 2)
+            .map(
+                (n) => `  <url>
+    <loc>${base}/blog/page/${n}</loc>
+    <lastmod>${mostRecentPostUpdate.toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`,
+            )
+            .join('\n');
 
         const categoryUrls = categories
             .map(
@@ -62,6 +75,7 @@ export async function GET() {
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+${pageUrls}
 ${categoryUrls}
 ${postUrls}
 </urlset>`;

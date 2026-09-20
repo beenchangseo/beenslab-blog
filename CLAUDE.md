@@ -56,6 +56,8 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 - 공개 페이지, API 라우트, sitemap이 모두 `src/lib/posts.ts`로 조회한다. 함수들은 `React.cache`로 감싸져 한 렌더 안의 중복 쿼리가 없고, 필터와 Date→ISO 문자열 변환도 이 파일 한 곳에서 한다. 새 조회도 여기에 추가할 것. 응답 DTO 타입은 `src/types/blog.ts`.
 - **공개용과 관리자용 조회가 나뉘어 있다.** `getAllPosts`/`getPostBySlug`는 `delete_time: null`에 더해 `status: 'PUBLISHED'`까지 걸러 초안이 새어나가지 않게 한다. 초안이 필요한 곳(`/admin/blog`, 에디터)은 `getAllPostsForAdmin`/`getPostBySlugForAdmin`을 쓰고, **이걸 쓰는 자리는 반드시 `getSession()`을 먼저 확인해야 한다**. `/api/blog/posts/[slug]`가 그 예다(이 경로는 `/admin` 아래가 아니라 proxy가 막아주지 않는다).
 - 공개 목록의 정렬 기준은 `create_time`이 아니라 `published_at`이다. 옛 글을 수정해도 순서가 튀지 않는다.
+- 검색은 서버에서 한다. `/search?q=`가 제목·설명·**본문**을 함께 훑는다(`searchPosts`). 한글은 PostgreSQL 기본 전문검색 파서가 제대로 못 자르므로 `ILIKE '%...%'`를 쓰고 `pg_trgm` GIN 인덱스가 받쳐준다. 검색 결과는 질의마다 달라 `force-dynamic`이고 `noindex`다. **목록(`/blog`)을 정적으로 남기려고 검색을 별도 경로로 뺐다** — 같은 페이지에서 `searchParams`를 읽으면 목록까지 동적이 된다.
+- 목록은 경로 기반 페이지네이션이다. 1페이지는 `/blog`, 2페이지부터 `/blog/page/[n]`이고 둘 다 프리렌더된다. 주소 규칙은 `src/app/(root-layout)/blog/pageHref.ts` 한 곳에 있다.
 - `/blog`, `/category`, `/blog/post/[slug]`는 `revalidate = 3600`인 ISR이고, 글 페이지는 `generateStaticParams`로 빌드 때 모두 생성된다. 글을 바꾸는 Server Action은 `revalidatePath('/', 'layout')`로 모든 페이지 캐시를 무효화한다. 단 sitemap(라우트 핸들러)은 Next 14 캐시가 태그 무효화를 적용하지 않아 최대 1시간 뒤에 갱신된다(로컬 `next start`에서 확인, Vercel은 미확인).
 - 시간이 지나 만료된 캐시는 DB 장애 중에도 이전 페이지를 계속 제공한다(STALE). 반면 `revalidatePath` 직후의 첫 요청은 블로킹 재생성이라, 그때 DB가 죽어 있으면 500이 난다.
 - `/admin/blog`는 최신 목록이 필요해서 `force-dynamic`이다. API 라우트(`/api/blog/posts`, `/api/categories` 등)는 관리자 에디터가 클라이언트에서 호출한다.

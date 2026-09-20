@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [pgcrypto]
+  extensions = [pgcrypto, pg_trgm]
 }
 
 model User {
@@ -93,6 +93,11 @@ model Post {
 
   @@index([status, published_at(sort: Desc)])
   @@index([series_id, series_order])
+  // 한글은 PostgreSQL 기본 전문검색 파서가 제대로 못 자른다. 트라이그램
+  // 인덱스로 ILIKE '%...%'를 가속하는 편이 실제로 맞는다.
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([contents(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("post")
 }
 
