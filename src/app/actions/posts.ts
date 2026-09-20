@@ -6,6 +6,13 @@ import {revalidatePath} from 'next/cache';
 import {getSession} from '@/lib/auth';
 import {generateSlugFromTitle} from '@/lib/slugify';
 
+// macOS에서 복사한 한글은 NFD(자모 분리) 상태로 들어온다. 브라우저는 합쳐서
+// 보여주지만 커버 이미지를 그리는 Satori는 자모 글리프를 못 찾아 두부(□)가
+// 된다. 검색·정렬도 NFC/NFD가 섞이면 어긋나므로 저장 직전에 맞춘다.
+function toNfc(value: string): string {
+    return value.normalize('NFC');
+}
+
 async function ensureUniqueSlug(baseSlug: string, excludePostId?: string): Promise<string> {
     let slug = baseSlug;
     let counter = 1;
@@ -65,8 +72,12 @@ export async function createPost(input: CreatePostInput) {
     }
 
     try {
-        const {title, description, contents, tags, categoryIds} = input;
+        const {categoryIds} = input;
         const {coverImage = null, seriesId = null, seriesOrder = null, publish = false} = input;
+        const title = toNfc(input.title);
+        const description = toNfc(input.description);
+        const contents = toNfc(input.contents);
+        const tags = input.tags.map(toNfc);
 
         const baseSlug = generateSlugFromTitle(title);
         const slug = await ensureUniqueSlug(baseSlug);
@@ -121,8 +132,12 @@ export async function updatePost(input: UpdatePostInput) {
     }
 
     try {
-        const {postId, title, description, contents, tags, categoryIds} = input;
+        const {postId, categoryIds} = input;
         const {coverImage = null, seriesId = null, seriesOrder = null, publish = false} = input;
+        const title = toNfc(input.title);
+        const description = toNfc(input.description);
+        const contents = toNfc(input.contents);
+        const tags = input.tags.map(toNfc);
 
         const existingPost = await prisma.post.findUnique({
             where: {id: postId},
