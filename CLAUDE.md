@@ -22,6 +22,7 @@ npm run db:backup      # blog 스키마 전체 덤프 (~/beenslab-blog-backups)
 npm run migrate:new -- <이름>  # 마이그레이션 SQL 생성 (DB 미적용)
 npm run migrate:deploy # 마이그레이션 적용
 npm run migrate:status # 적용 상태 확인
+npm run sync:views     # Redis 누적 조회수를 post.view_count로 반영
 ```
 
 - 쉘에 `NODE_ENV=development`가 설정돼 있으면 `next build`가 prerender 단계에서 `Cannot read properties of null (reading 'useContext')`로 실패한다(Next 16에서도 `/career`에서 동일하게 재현) → `NODE_ENV=production npm run build`.
@@ -53,18 +54,24 @@ npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list 
 
 ### 읽기 경로: `src/lib/posts.ts` → Prisma, 공개 페이지는 ISR 캐시
 
-- 공개 페이지, API 라우트, sitemap이 모두 `src/lib/posts.ts`(`getAllPosts`/`getPostBySlug`/`getCategories`)로 조회한다. 함수들은 `React.cache`로 감싸져 한 렌더 안의 중복 쿼리가 없고, soft delete(`delete_time: null`) 필터와 Date→ISO 문자열 변환도 이 파일 한 곳에서 한다. 새 조회도 여기에 추가할 것. 응답 DTO 타입은 `src/types/blog.ts`.
+- 공개 페이지, API 라우트, sitemap이 모두 `src/lib/posts.ts`로 조회한다. 함수들은 `React.cache`로 감싸져 한 렌더 안의 중복 쿼리가 없고, 필터와 Date→ISO 문자열 변환도 이 파일 한 곳에서 한다. 새 조회도 여기에 추가할 것. 응답 DTO 타입은 `src/types/blog.ts`.
+- **공개용과 관리자용 조회가 나뉘어 있다.** `getAllPosts`/`getPostBySlug`는 `delete_time: null`에 더해 `status: 'PUBLISHED'`까지 걸러 초안이 새어나가지 않게 한다. 초안이 필요한 곳(`/admin/blog`, 에디터)은 `getAllPostsForAdmin`/`getPostBySlugForAdmin`을 쓰고, **이걸 쓰는 자리는 반드시 `getSession()`을 먼저 확인해야 한다**. `/api/blog/posts/[slug]`가 그 예다(이 경로는 `/admin` 아래가 아니라 proxy가 막아주지 않는다).
+- 공개 목록의 정렬 기준은 `create_time`이 아니라 `published_at`이다. 옛 글을 수정해도 순서가 튀지 않는다.
 - `/blog`, `/category`, `/blog/post/[slug]`는 `revalidate = 3600`인 ISR이고, 글 페이지는 `generateStaticParams`로 빌드 때 모두 생성된다. 글을 바꾸는 Server Action은 `revalidatePath('/', 'layout')`로 모든 페이지 캐시를 무효화한다. 단 sitemap(라우트 핸들러)은 Next 14 캐시가 태그 무효화를 적용하지 않아 최대 1시간 뒤에 갱신된다(로컬 `next start`에서 확인, Vercel은 미확인).
 - 시간이 지나 만료된 캐시는 DB 장애 중에도 이전 페이지를 계속 제공한다(STALE). 반면 `revalidatePath` 직후의 첫 요청은 블로킹 재생성이라, 그때 DB가 죽어 있으면 500이 난다.
 - `/admin/blog`는 최신 목록이 필요해서 `force-dynamic`이다. API 라우트(`/api/blog/posts`, `/api/categories` 등)는 관리자 에디터가 클라이언트에서 호출한다.
 - 게시글의 `categories`는 카테고리 **keyword** 문자열 배열이다(id/title 아님). 필터링은 keyword로 하고, 표시용 title은 `getCategories()` 결과로 매핑하며, 에디터는 keyword→id로 바꿔 액션에 `categoryIds`를 넘긴다.
+- 카테고리는 2026-09에 8개(Javascript/AWS/PostgreSQL 같은 기술 스택 라벨)에서 기술 영역 기준 **4개**(`backend`/`database`/`infra`/`etc`)로 재편했다. 원래 keyword는 각 글의 `tags`로 옮겨서 보존돼 있다(`other`만 정보가 없어 버렸다). 매핑은 `prisma/migrations/20260920020000_reorganize_categories`에 slug로 박혀 있다.
 - `/category`는 필터 쿼리를 읽는 `CategoryFilterFromSearchParams`(`useSearchParams`)를 `<Suspense>`로 감싸고, 필터 없는 `CategoryFilter`를 fallback으로 넘긴다. 정적 렌더링 때는 이 fallback이 HTML에 들어가므로, fallback을 비우면 `/category`의 HTML 본문이 사라진다.
 
 ### 쓰기 경로: Server Actions (`src/app/actions/`)
 
 - `posts.ts`(create/update/softDelete/permanentlyDelete), `categories.ts`, `auth.ts`가 Prisma를 직접 쓰고 `{success, data | error}`를 반환한다. `categories.ts`는 연결된 UI가 아직 없다(카테고리는 DB에서 직접 관리).
-- Slug는 `src/lib/slugify.ts`가 만든다. 한글 제목은 `@romanize/korean`으로 로마자화한 뒤 slugify하고, 중복이면 `-1`, `-2`… 접미사를 붙인다. **수정할 때 제목이 바뀌면 slug도 새로 생성**되므로 기존 URL이 깨지고(리다이렉트 없음) slug를 키로 쓰는 조회수도 초기화된다.
-- `Post.title`은 `@unique`이고, soft delete된 글도 이 제약에 포함된다. 수정 시 `PostOnCategory` 조인 행은 트랜잭션 안에서 전부 지우고 다시 만든다.
+- Slug는 `src/lib/slugify.ts`가 만든다. 한글 제목은 `@romanize/korean`으로 로마자화한 뒤 slugify하고, 중복이면 `-1`, `-2`… 접미사를 붙인다. 제목이 바뀌면 slug도 새로 생성되지만, 이제 옛 slug가 `post_slug_history`에 남아 글 페이지가 308로 현재 주소에 넘겨준다. `ensureUniqueSlug`는 다른 글의 옛 slug도 피한다.
+- **조회수는 slug를 키로 쓰므로 제목을 바꾸면 여전히 0부터 다시 센다**(Redis 키가 달라진다). 리다이렉트만 해결됐다.
+- `Post.title`의 `@unique`는 제거했다(soft delete된 글까지 제약에 걸려 지운 제목을 재사용할 수 없었다). 식별자 역할은 `slug`가 하고 이쪽이 `@unique`다. 수정 시 `PostOnCategory` 조인 행은 트랜잭션 안에서 전부 지우고 다시 만든다.
+- 새 글의 기본 상태는 `DRAFT`다. 에디터의 '발행' 버튼이 `publish: true`를 넘겨야 공개된다. `published_at`은 초안→발행으로 처음 넘어갈 때만 찍히고, 이미 공개된 글을 수정한다고 갱신되지 않는다.
+- `post.view_count`는 목록 정렬용 사본이다. 실시간 카운팅은 여전히 Redis가 하고 `npm run sync:views`로 주기적으로 옮긴다(로컬 `.env`의 KV 값은 placeholder라 실제 자격증명이 있는 곳에서 돌려야 한다).
 - 본문은 `post.contents`에 Markdown으로 저장된다. `src/components/Mdx.tsx`는 이름과 달리 MDX가 아니라 `react-markdown` + `remark-gfm` + `rehype-highlight`이고, 본문의 raw HTML은 렌더링되지 않고 텍스트로 보인다(코드 하이라이트 테마는 `globals.css`의 highlight.js import). 게시글용 이미지는 `public/images/`에 커밋해서 정적 파일로 제공한다.
 - 마크다운 `![](...)`에는 크기 정보가 없어 그냥 두면 원본을 통째로 받고 레이아웃도 밀린다. `Mdx.tsx`가 `img`를 가로채 `src/lib/imageSize.ts`로 PNG/JPEG 헤더에서 실제 크기를 읽고 `next/image`에 넘긴다(의존성 없이 직접 파싱, `public/` 밖 경로와 외부 URL은 null 반환). 새 이미지 포맷을 쓰려면 이 파서에 추가해야 한다.
 - 테이블은 snake_case(`@@map`)이고, `OauthClient` 모델은 쓰지 않는다(이전 OAuth 연동 잔재).

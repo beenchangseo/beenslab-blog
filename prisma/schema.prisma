@@ -39,22 +39,73 @@ model Category {
   @@map("category")
 }
 
-model Post {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug           String?          @default("")
-  user_id        String           @db.Uuid
-  title          String           @unique
-  description    String
-  tags           String[]
-  contents       String
-  create_time    DateTime         @default(now())
-  update_time    DateTime         @default(now())
-  delete_time    DateTime?
-  user           User             @relation(fields: [user_id], references: [id])
-  PostOnCategory PostOnCategory[]
+enum PostStatus {
+  DRAFT
+  PUBLISHED
 
-  @@index([slug])
+  @@map("post_status")
+}
+
+model Series {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String   @unique
+  title       String
+  description String?
+  create_time DateTime @default(now())
+  update_time DateTime @default(now())
+  posts       Post[]
+
+  @@map("series")
+}
+
+model Post {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // slug는 URL의 일부라 비어 있으면 안 된다. @unique가 인덱스도 겸한다.
+  slug    String @unique
+  user_id String @db.Uuid
+
+  // title에 걸려 있던 @unique를 뺐다. soft delete된 글도 제약에 포함돼서
+  // 한 번 지운 제목을 다시 쓸 수 없었다. 식별자 역할은 slug가 한다.
+  title       String
+  description String
+  cover_image String?
+  tags        String[]
+  contents    String
+
+  // 발행 상태. create_time은 "작성 시각"이고 published_at이 "공개 시각"이다.
+  status       PostStatus @default(DRAFT)
+  published_at DateTime?
+
+  // 인기 글 정렬용. 실시간 카운팅은 Redis가 하고 이쪽으로 주기 동기화한다.
+  view_count Int @default(0)
+
+  series_id    String? @db.Uuid
+  series_order Int?
+
+  create_time DateTime  @default(now())
+  update_time DateTime  @default(now())
+  delete_time DateTime?
+
+  user           User              @relation(fields: [user_id], references: [id])
+  series         Series?           @relation(fields: [series_id], references: [id], onDelete: SetNull)
+  PostOnCategory PostOnCategory[]
+  slugHistory    PostSlugHistory[]
+
+  @@index([status, published_at(sort: Desc)])
+  @@index([series_id, series_order])
   @@map("post")
+}
+
+// 제목을 바꾸면 slug가 새로 생성돼 기존 URL이 깨진다. 예전 slug를 남겨
+// 301로 넘겨주기 위한 표.
+model PostSlugHistory {
+  old_slug    String   @id
+  post_id     String   @db.Uuid
+  create_time DateTime @default(now())
+  post        Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id])
+  @@map("post_slug_history")
 }
 
 model PostOnCategory {

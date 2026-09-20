@@ -12,7 +12,8 @@
     "migrate:new": "node --env-file=.env prisma/create-migration.mjs",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
-    "db:backup": "node --env-file=.env prisma/backup.mjs"
+    "db:backup": "node --env-file=.env prisma/backup.mjs",
+    "sync:views": "node --env-file=.env prisma/sync-views.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

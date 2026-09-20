@@ -18,7 +18,18 @@ async function ensureUniqueSlug(baseSlug: string, excludePostId?: string): Promi
             },
         });
 
-        if (!existing) {
+        // 예전 slug도 피해야 한다. 그러지 않으면 새 글이 다른 글의 리다이렉트
+        // 주소를 차지해 옛 링크가 엉뚱한 곳으로 간다.
+        const reserved = existing
+            ? null
+            : await prisma.postSlugHistory.findFirst({
+                  where: {
+                      old_slug: slug,
+                      ...(excludePostId && {post_id: {not: excludePostId}}),
+                  },
+              });
+
+        if (!existing && !reserved) {
             return slug;
         }
 
@@ -33,6 +44,10 @@ export interface CreatePostInput {
     contents: string;
     tags: string[];
     categoryIds: string[];
+    coverImage?: string | null;
+    seriesId?: string | null;
+    seriesOrder?: number | null;
+    publish?: boolean;
 }
 
 export interface UpdatePostInput extends CreatePostInput {
@@ -51,6 +66,7 @@ export async function createPost(input: CreatePostInput) {
 
     try {
         const {title, description, contents, tags, categoryIds} = input;
+        const {coverImage = null, seriesId = null, seriesOrder = null, publish = false} = input;
 
         const baseSlug = generateSlugFromTitle(title);
         const slug = await ensureUniqueSlug(baseSlug);
@@ -63,6 +79,12 @@ export async function createPost(input: CreatePostInput) {
                     description,
                     contents,
                     tags,
+                    cover_image: coverImage,
+                    series_id: seriesId,
+                    series_order: seriesOrder,
+                    // 기본은 초안이다. 발행은 에디터에서 명시적으로 눌러야 한다.
+                    status: publish ? 'PUBLISHED' : 'DRAFT',
+                    published_at: publish ? new Date() : null,
                     user_id: session.userId,
                     update_time: new Date(),
                 },
@@ -100,6 +122,7 @@ export async function updatePost(input: UpdatePostInput) {
 
     try {
         const {postId, title, description, contents, tags, categoryIds} = input;
+        const {coverImage = null, seriesId = null, seriesOrder = null, publish = false} = input;
 
         const existingPost = await prisma.post.findUnique({
             where: {id: postId},
@@ -110,13 +133,31 @@ export async function updatePost(input: UpdatePostInput) {
             return {success: false, error: 'Post not found'};
         }
 
-        let slug = existingPost.slug || '';
+        const previousSlug = existingPost.slug;
+        let slug = previousSlug;
         if (existingPost.title !== title) {
             const baseSlug = generateSlugFromTitle(title);
             slug = await ensureUniqueSlug(baseSlug, postId);
         }
 
+        // 초안이었다가 처음 발행되는 순간에만 공개 시각을 찍는다. 이미 공개된
+        // 글을 수정한다고 해서 목록 맨 위로 올라오면 안 된다.
+        const wasPublished = existingPost.status === 'PUBLISHED';
+        const published_at =
+            publish && !wasPublished ? new Date() : publish ? existingPost.published_at : null;
+
         const post = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+            if (slug !== previousSlug) {
+                // 새 slug가 예전에 다른 용도로 쓰였다면 그 기록은 무효다.
+                await tx.postSlugHistory.deleteMany({where: {old_slug: slug}});
+                // 옛 주소로 들어오는 요청을 넘겨주기 위해 남긴다.
+                await tx.postSlugHistory.upsert({
+                    where: {old_slug: previousSlug},
+                    create: {old_slug: previousSlug, post_id: postId},
+                    update: {post_id: postId},
+                });
+            }
+
             const updatedPost = await tx.post.update({
                 where: {id: postId},
                 data: {
@@ -125,6 +166,11 @@ export async function updatePost(input: UpdatePostInput) {
                     description,
                     contents,
                     tags,
+                    cover_image: coverImage,
+                    series_id: seriesId,
+                    series_order: seriesOrder,
+                    status: publish ? 'PUBLISHED' : 'DRAFT',
+                    published_at,
                     update_time: new Date(),
                 },
             });

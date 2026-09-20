@@ -1,11 +1,11 @@
-import {getAllPosts} from '@/lib/posts';
+import {getAllPostsForAdmin} from '@/lib/posts';
 import BlogSearch from '../../../../components/BlogSearch';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBlogPage() {
-    const posts = await getAllPosts();
+    const posts = await getAllPostsForAdmin();
     return (
         <div>
             <div className="flex justify-between items-center mb-6">

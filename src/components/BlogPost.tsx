@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useState} from 'react';
 import {softDeletePost} from '@/app/actions/posts';
 import {useRouter} from 'next/navigation';
+import {PostStatus} from '@/types/blog';
 
 interface BlogPostProps {
     date: string;
@@ -13,6 +14,8 @@ interface BlogPostProps {
     categories: string[];
     postId?: string;
     showAdminButtons?: boolean;
+    status?: PostStatus;
+    viewCount?: number;
 }
 
 export default function BlogPost({
@@ -23,6 +26,8 @@ export default function BlogPost({
     categories,
     postId,
     showAdminButtons = false,
+    status,
+    viewCount,
 }: BlogPostProps) {
     const router = useRouter();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -53,8 +58,17 @@ export default function BlogPost({
         <>
             <div className="w-full my-7">
                 <Link href={`/blog/post/${slug}`} passHref>
-                    <div className="font-medium text-xs transition text-gray-500 dark:text-gray-300">
-                        {new Date(date).toLocaleDateString()}
+                    <div className="flex items-center gap-2 font-medium text-xs transition text-gray-500 dark:text-gray-300">
+                        <span>{new Date(date).toLocaleDateString()}</span>
+                        {/* 초안은 공개 목록에 안 나오므로 관리자 화면에서만 보인다. */}
+                        {showAdminButtons && status === 'DRAFT' && (
+                            <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                                초안
+                            </span>
+                        )}
+                        {showAdminButtons && viewCount != null && viewCount > 0 && (
+                            <span>조회 {viewCount.toLocaleString()}</span>
+                        )}
                     </div>
                     <div className="font-extrabold text-xl sm:text-2xl mt-2 transition text-black dark:text-white hover:text-green-500 dark:hover:text-green-500">
                         {title}

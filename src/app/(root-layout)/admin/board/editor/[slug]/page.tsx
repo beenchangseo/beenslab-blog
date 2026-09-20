@@ -4,21 +4,13 @@ import MDEditor from '@uiw/react-md-editor';
 import {useState, useEffect, use} from 'react';
 import {updatePost} from '@/app/actions/posts';
 import {useRouter} from 'next/navigation';
+import PostMetaFields from '@/components/admin/PostMetaFields';
+import {GetBlogPostResponseDto, GetSeriesResponseDto, PostStatus} from '@/types/blog';
 
 interface Category {
     id: string;
     keyword: string;
     title: string;
-}
-
-interface Post {
-    id: string;
-    slug: string;
-    title: string;
-    description: string;
-    tags: string[];
-    contents: string;
-    categories: string[];
 }
 
 export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
@@ -33,6 +25,11 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
     const [content, setContent] = useState('');
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [seriesList, setSeriesList] = useState<GetSeriesResponseDto[]>([]);
+    const [coverImage, setCoverImage] = useState('');
+    const [seriesId, setSeriesId] = useState('');
+    const [seriesOrder, setSeriesOrder] = useState('');
+    const [status, setStatus] = useState<PostStatus>('DRAFT');
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
     const [error, setError] = useState('');
@@ -70,12 +67,26 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
             const result = await response.json();
 
             if (result.data) {
-                const post: Post = result.data;
+                const post: GetBlogPostResponseDto = result.data;
                 setPostId(post.id);
                 setTitle(post.title);
                 setDescription(post.description);
                 setTags(post.tags.join(', '));
                 setContent(post.contents);
+                setCoverImage(post.cover_image ?? '');
+                setSeriesOrder(post.series?.order != null ? String(post.series.order) : '');
+                setStatus(post.status);
+
+                const seriesResponse = await fetch('/api/series');
+                const seriesResult = await seriesResponse.json();
+                if (seriesResult.data) {
+                    setSeriesList(seriesResult.data);
+                    // DTO는 시리즈를 slug로 주는데 액션에는 id로 넘겨야 한다.
+                    const match = seriesResult.data.find(
+                        (item: GetSeriesResponseDto) => item.slug === post.series?.slug,
+                    );
+                    setSeriesId(match?.id ?? '');
+                }
 
                 const categoriesResponse = await fetch('/api/categories');
                 const categoriesResult = await categoriesResponse.json();
@@ -124,7 +135,7 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
         );
     }
 
-    async function handleUpdate() {
+    async function handleSave(publish: boolean) {
         if (!title.trim()) {
             setError('제목을 입력해주세요.');
             return;
@@ -167,11 +178,21 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
                 contents: content,
                 tags: tagsArray,
                 categoryIds: selectedCategoryIds,
+                coverImage: coverImage.trim() || null,
+                seriesId: seriesId || null,
+                seriesOrder: seriesOrder ? Number(seriesOrder) : null,
+                publish,
             });
 
             if (result.success && result.data) {
-                alert('게시글이 성공적으로 수정되었습니다!');
-                router.push(`/blog/post/${result.data.slug}`);
+                if (publish) {
+                    alert('게시글이 수정되었습니다.');
+                    router.push(`/blog/post/${result.data.slug}`);
+                } else {
+                    // 초안으로 내리면 공개 페이지에서 사라지므로 목록으로 보낸다.
+                    alert('초안으로 저장했습니다.');
+                    router.push('/admin/blog');
+                }
             } else {
                 setError(result.error || '게시글 수정에 실패했습니다.');
             }
@@ -199,7 +220,18 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">게시글 수정</h1>
+            <div className="flex items-center gap-3 mb-6">
+                <h1 className="text-3xl font-bold">게시글 수정</h1>
+                <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                        status === 'PUBLISHED'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                            : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                    }`}
+                >
+                    {status === 'PUBLISHED' ? '발행됨' : '초안'}
+                </span>
+            </div>
 
             {error && (
                 <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
@@ -260,6 +292,16 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
                 </div>
             </div>
 
+            <PostMetaFields
+                coverImage={coverImage}
+                setCoverImage={setCoverImage}
+                seriesId={seriesId}
+                setSeriesId={setSeriesId}
+                seriesOrder={seriesOrder}
+                setSeriesOrder={setSeriesOrder}
+                seriesList={seriesList}
+            />
+
             <div className="mb-4">
                 <label className="block text-xl font-semibold mb-2">내용 *</label>
                 <MDEditor value={content} onChange={(val) => setContent(val || '')} height={500} />
@@ -267,11 +309,18 @@ export default function EditPostPage(props: {params: Promise<{slug: string}>}) {
 
             <div className="flex gap-4">
                 <button
-                    onClick={handleUpdate}
+                    onClick={() => handleSave(true)}
                     disabled={isLoading}
                     className="bg-blue-500 text-white px-6 py-2 rounded-sm hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                    {isLoading ? '수정 중...' : '수정'}
+                    {isLoading ? '저장 중...' : status === 'PUBLISHED' ? '수정' : '발행'}
+                </button>
+                <button
+                    onClick={() => handleSave(false)}
+                    disabled={isLoading}
+                    className="border border-gray-400 px-6 py-2 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    초안으로 저장
                 </button>
                 <button
                     onClick={() => router.back()}

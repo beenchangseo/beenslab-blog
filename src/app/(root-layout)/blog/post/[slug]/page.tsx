@@ -1,10 +1,10 @@
 import {Mdx} from '../../../../../components/Mdx';
-import {getAllPosts, getCategories, getPostBySlug} from '@/lib/posts';
+import {getAllPosts, getCategories, getPostBySlug, getSlugRedirect} from '@/lib/posts';
 import Link from 'next/link';
 import Image from 'next/image';
 import {Metadata} from 'next';
 import Script from 'next/script';
-import {notFound} from 'next/navigation';
+import {notFound, permanentRedirect} from 'next/navigation';
 
 export const revalidate = 3600;
 
@@ -13,14 +13,28 @@ export async function generateStaticParams() {
     return posts.filter((post) => post.slug).map((post) => ({slug: post.slug}));
 }
 
+// generateMetadata와 페이지 본문이 둘 다 글을 찾으므로 한 곳에 모은다.
+// 제목을 바꾸면 slug가 새로 생성돼 옛 주소가 깨지는데, 그때는 404 대신
+// 현재 주소로 308을 내보낸다.
+async function resolvePost(slug: string) {
+    const post = await getPostBySlug(slug);
+    if (post) {
+        return post;
+    }
+
+    const currentSlug = await getSlugRedirect(slug);
+    if (currentSlug) {
+        permanentRedirect(`/blog/post/${currentSlug}`);
+    }
+
+    notFound();
+}
+
 export async function generateMetadata(props: {
     params: Promise<{slug: string}>;
 }): Promise<Metadata> {
     const params = await props.params;
-    const post = await getPostBySlug(params.slug);
-    if (!post) {
-        notFound();
-    }
+    const post = await resolvePost(params.slug);
     const url = `https://blog.beenslab.com/blog/post/${params.slug}`;
     return {
         title: post.title,
@@ -33,7 +47,7 @@ export async function generateMetadata(props: {
             url,
             type: 'article',
             images: [{url: '/opengraph-image', width: 1200, height: 630, alt: post.title}],
-            publishedTime: post.create_time,
+            publishedTime: post.published_at ?? post.create_time,
             modifiedTime: post.update_time,
             authors: ['ChangBeen Seo'],
             tags: post.tags,
@@ -54,11 +68,10 @@ export async function generateMetadata(props: {
 
 export default async function PostPage(props: {params: Promise<{slug: string}>}) {
     const params = await props.params;
-    const post = await getPostBySlug(params.slug);
-    if (!post) {
-        notFound();
-    }
+    const post = await resolvePost(params.slug);
     const categories = await getCategories();
+    // 공개 시각이 곧 독자에게 보여줄 날짜다. 없으면 작성 시각으로 떨어진다.
+    const publishedAt = post.published_at ?? post.create_time;
 
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
@@ -110,7 +123,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                 url: 'https://blog.beenslab.com/apple-icon',
             },
         },
-        datePublished: post.create_time,
+        datePublished: publishedAt,
         dateModified: post.update_time,
         image: 'https://blog.beenslab.com/opengraph-image',
         inLanguage: 'ko',
@@ -167,11 +180,8 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                             <Link href="/">beenchangseo</Link>
                         </span>
                         <span className="ml-1 mr-1">·</span>
-                        <time
-                            className="text-sm font-medium text-gray-500"
-                            dateTime={post.create_time}
-                        >
-                            {formatDate(post.create_time.toString())}
+                        <time className="text-sm font-medium text-gray-500" dateTime={publishedAt}>
+                            {formatDate(publishedAt)}
                         </time>
                         <span className="flex items-center ml-auto">
                             {/* 조회수 배지. 링크가 아니므로 a로 감싸지 않는다. */}

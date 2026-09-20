@@ -4,6 +4,8 @@ import MDEditor from '@uiw/react-md-editor';
 import {useState, useEffect} from 'react';
 import {createPost} from '@/app/actions/posts';
 import {useRouter} from 'next/navigation';
+import PostMetaFields from '@/components/admin/PostMetaFields';
+import {GetSeriesResponseDto} from '@/types/blog';
 
 interface Category {
     id: string;
@@ -20,6 +22,10 @@ export default function BoardEditorPage() {
     const [tags, setTags] = useState('');
     const [content, setContent] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
+    const [seriesList, setSeriesList] = useState<GetSeriesResponseDto[]>([]);
+    const [coverImage, setCoverImage] = useState('');
+    const [seriesId, setSeriesId] = useState('');
+    const [seriesOrder, setSeriesOrder] = useState('');
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -38,16 +44,19 @@ export default function BoardEditorPage() {
         checkAuth();
     }, [router]);
 
-    async function fetchCategories() {
+    async function fetchOptions() {
         try {
-            const response = await fetch('/api/categories');
-            const result = await response.json();
-            if (result.data) {
-                setCategories(result.data);
-            }
+            const [catRes, seriesRes] = await Promise.all([
+                fetch('/api/categories'),
+                fetch('/api/series'),
+            ]);
+            const cat = await catRes.json();
+            const series = await seriesRes.json();
+            if (cat.data) setCategories(cat.data);
+            if (series.data) setSeriesList(series.data);
         } catch (err) {
-            console.error('Failed to fetch categories:', err);
-            setError('카테고리를 불러오는데 실패했습니다.');
+            console.error('Failed to fetch editor options:', err);
+            setError('카테고리/시리즈를 불러오는데 실패했습니다.');
         }
     }
 
@@ -56,7 +65,7 @@ export default function BoardEditorPage() {
     // 이펙트 본문에서 동기적으로 상태를 바꾸지 않는다.
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
-        fetchCategories();
+        fetchOptions();
     }, []);
     /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -68,7 +77,7 @@ export default function BoardEditorPage() {
         );
     }
 
-    async function handlePublish() {
+    async function handleSave(publish: boolean) {
         if (!title.trim()) {
             setError('제목을 입력해주세요.');
             return;
@@ -110,11 +119,21 @@ export default function BoardEditorPage() {
                 contents: content,
                 tags: tagsArray,
                 categoryIds: selectedCategoryIds,
+                coverImage: coverImage.trim() || null,
+                seriesId: seriesId || null,
+                seriesOrder: seriesOrder ? Number(seriesOrder) : null,
+                publish,
             });
 
             if (result.success && result.data) {
-                alert('게시글이 성공적으로 게시되었습니다!');
-                router.push(`/blog/post/${result.data.slug}`);
+                if (publish) {
+                    alert('게시글이 발행되었습니다.');
+                    router.push(`/blog/post/${result.data.slug}`);
+                } else {
+                    // 초안은 공개 페이지에 없으므로 관리자 목록으로 돌아간다.
+                    alert('초안으로 저장했습니다.');
+                    router.push('/admin/blog');
+                }
             } else {
                 setError(result.error || '게시글 작성에 실패했습니다.');
             }
@@ -201,6 +220,16 @@ export default function BoardEditorPage() {
                 </div>
             </div>
 
+            <PostMetaFields
+                coverImage={coverImage}
+                setCoverImage={setCoverImage}
+                seriesId={seriesId}
+                setSeriesId={setSeriesId}
+                seriesOrder={seriesOrder}
+                setSeriesOrder={setSeriesOrder}
+                seriesList={seriesList}
+            />
+
             <div className="mb-4">
                 <label className="block text-xl font-semibold mb-2">내용 *</label>
                 <MDEditor value={content} onChange={(val) => setContent(val || '')} height={500} />
@@ -208,11 +237,18 @@ export default function BoardEditorPage() {
 
             <div className="flex gap-4">
                 <button
-                    onClick={handlePublish}
+                    onClick={() => handleSave(true)}
                     disabled={isLoading}
                     className="bg-blue-500 text-white px-6 py-2 rounded-sm hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                    {isLoading ? '게시 중...' : '게시'}
+                    {isLoading ? '저장 중...' : '발행'}
+                </button>
+                <button
+                    onClick={() => handleSave(false)}
+                    disabled={isLoading}
+                    className="border border-gray-400 px-6 py-2 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    초안 저장
                 </button>
                 <button
                     onClick={() => router.back()}
