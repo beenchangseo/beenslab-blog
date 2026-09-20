@@ -94,6 +94,7 @@ npm run migrate:status                 # 확인
 - 마이그레이션은 2026-09-20에 베이스라인을 잡았다. `0_init`은 기존 운영 DB 구조를 그대로 옮겨 적은 것이고, **실행된 적 없이 `migrate resolve --applied`로 기록만 했다**(`_prisma_migrations`의 `applied_steps_count=0`). 빈 DB에 `migrate deploy`를 돌릴 때만 실제로 실행된다.
 - Prisma가 생성한 원본 베이스라인은 `CREATE SCHEMA "public"`이었는데 `"blog"`로 고쳤다. 안 고치면 빈 DB에서 "no schema has been selected to create in"으로 실패한다.
 - 백업은 저장소 밖(`~/beenslab-blog-backups/`)에 둔다. 게시글 본문이 들어있어 git에 들어가면 안 된다.
+- **SQL로 데이터를 직접 바꾸면 Next 캐시는 그대로다.** Server Action을 거칠 때와 달리 `revalidatePath`가 불리지 않아, 배포 후에도 ISR 캐시가 만료될 때까지(최대 1시간) 옛 내용이 섞여 보인다. 2026-09 카테고리 재편 때 글 페이지 일부가 옛 카테고리를 그대로 보여줬다. 급하면 해당 페이지를 한 번씩 열어 재생성시키거나 재배포할 것.
 - 접속이 `sslmode=disable`이다. 자격증명과 데이터가 공용 인터넷 구간을 평문으로 지난다. VM에 인증서를 붙이고 `sslmode=require`로 바꾸는 게 맞다(미처리).
 
 ### 인증
