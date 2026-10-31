@@ -1,160 +1,159 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+개인 기술 블로그와 이력서 사이트(https://blog.beenslab.com)다. Next.js 16.3 App Router(React 19, Turbopack), Prisma 6(PostgreSQL 16), Tailwind CSS 4로 만들었고 Vercel에 배포한다. 글과 카테고리는 DB에 있고 `/admin`의 마크다운 에디터로 쓴다.
 
-## 개요
+이 파일에는 코드만 봐서는 알 수 없는 사실과 깨면 안 되는 규칙을 적는다. 순서가 있는 작업은 프로젝트 스킬에 있다.
 
-개인 기술 블로그 + 이력서 사이트 (https://blog.beenslab.com). Next.js 16.3 App Router(React 19, Turbopack) + Prisma 6(PostgreSQL), Tailwind CSS 4, Vercel 배포. 게시글/카테고리는 DB에 저장되고 `/admin`의 마크다운 에디터로 작성한다. `README.md`는 create-next-app 기본 템플릿이라 참고할 내용이 없다(포트도 실제와 다름).
-
-DB는 Oracle Cloud 춘천 리전 VM에 도커로 띄운 PostgreSQL 16이다(`postgres:16-alpine`, 컨테이너 이름 `postgres`). 같은 인스턴스에 `emotion_tree` DB도 있으니 서버 전역 설정을 바꿀 때 주의할 것. Vercel 함수 리전은 대시보드 설정으로 `icn1`(서울)이다(`vercel.json` 없음, 새 프로젝트 기본값은 `iad1`). 캐시되지 않은 렌더링(ISR 재생성, API 라우트, 관리자 페이지)은 DB를 거치므로 함수 리전과 DB는 같은 지역에 있어야 한다. DNS는 Cloudflare에서 관리하지만 `blog` 레코드는 프록시를 끈 상태(DNS only)로 둔다. 프록시를 켜면 한국 방문자가 Cloudflare LA를 거쳐 응답이 약 0.7초 느려진다(2026-09 측정).
+| 작업 | 스킬 |
+| --- | --- |
+| 스키마 변경, 운영 데이터 수정 | `.claude/skills/db-migration` |
+| 동작을 바꾸지 않는 구조 변경 확인 | `.claude/skills/verify-refactor` |
+| 공개 페이지 추가, 메타데이터·캐시 변경 | `.claude/skills/add-page` |
 
 ## 명령어
 
 ```bash
-npm run dev            # dev 서버, 포트 7777 (Turbopack)
-npm run build          # 프로덕션 빌드 (DATABASE_URL 필요: 공개 페이지를 빌드 때 prerender)
-npm start              # 포트 7777
-npm run lint           # eslint . — next lint는 Next 16에서 삭제됐다
-npm run typecheck      # tsc --noEmit
-npx prisma generate    # schema.prisma 수정 후 (postinstall에서도 실행됨)
-
-npm run db:backup      # blog 스키마 전체 덤프 (~/beenslab-blog-backups)
-npm run migrate:new -- <이름>  # 마이그레이션 SQL 생성 (DB 미적용)
-npm run migrate:deploy # 마이그레이션 적용
-npm run migrate:status # 적용 상태 확인
+npm run dev            # 개발 서버, 포트 7777
+npm run check          # typecheck + lint + format:check. 커밋 전에 돌린다
+npm run build          # 프로덕션 빌드. 공개 페이지를 prerender하므로 DATABASE_URL이 필요하다
+npm run test:e2e       # Playwright. 개발 서버를 띄우거나 떠 있는 서버를 재사용한다
+npm run format         # ts, tsx, mjs에 prettier
+npm run snapshot -- <baseUrl> <outDir>   # 빌드 비교용 응답 기록 (verify-refactor 스킬)
+npm run db:backup      # blog 스키마 덤프 (~/beenslab-blog-backups)
+npm run migrate:new -- <이름> / migrate:deploy / migrate:status
 ```
 
-- 쉘에 `NODE_ENV=development`가 설정돼 있으면 `next build`가 prerender 단계에서 `Cannot read properties of null (reading 'useContext')`로 실패한다(Next 16에서도 `/career`에서 동일하게 재현) → `NODE_ENV=production npm run build`.
-- Prettier는 포맷 스크립트 없이 파일 단위로 실행한다: `npx prettier --write <file>`. `.prettierrc`가 `"parser": "typescript"`를 강제하므로 `.ts/.tsx`에만 쓸 것 (CSS/JSON에 돌리면 파싱 에러). 스타일: 4칸 들여쓰기, single quote, `{foo}`(bracketSpacing false), printWidth 100.
-- ESLint는 flat config(`eslint.config.mjs`)다. ESLint 10은 `eslint-config-next`가 번들한 `eslint-plugin-react`와 아직 호환되지 않으므로(`contextOrFilename.getFilename is not a function`) 9.x에 묶어둔다.
-- `next dev`가 `CLAUDE.md` 끝에 `nextjs-agent-rules` 블록을 자동으로 다시 써넣는다. 지워도 되살아나므로 그냥 커밋해 둔다.
+- 최초 1회 `npx playwright install chromium`.
+- `next dev`는 이 파일 끝에 `nextjs-agent-rules` 블록을 다시 써넣는다. 지워도 되살아나므로 그대로 커밋한다.
+- ESLint는 9.x에 묶여 있다. 10은 `eslint-config-next`가 번들한 `eslint-plugin-react`와 호환되지 않는다(`contextOrFilename.getFilename is not a function`).
 
-### 테스트 (Playwright E2E만 있음)
+## Claude Code hook
 
-```bash
-npx playwright install chromium                                                  # 최초 1회
-npx playwright test                                                              # 전체
-npx playwright test tests/auth.spec.ts -g "invalid credentials" --reporter=list  # 단일 테스트
+`.claude/settings.json`에 있다. 동작을 바꾸려면 `.claude/hooks/`의 스크립트를 고친다.
+
+- Bash에서 `prisma migrate dev`, `prisma migrate reset`, `prisma db push`를 실행하면 막힌다.
+- 파일을 고치면 그 파일에 prettier를 돌리고, eslint 결과(경고 포함)를 돌려준다.
+- 턴을 끝낼 때 바뀐 `.ts`/`.tsx`가 있으면 `npm run typecheck`를 돌리고, 실패하면 끝내지 않는다.
+
+## 디렉터리
+
+```
+src/
+├── app/                    라우트만 둔다
+│   ├── (root-layout)/      헤더·푸터가 있는 페이지. 공개 페이지와 /admin/blog, 에디터
+│   ├── (no-layout)/        /admin/signin
+│   ├── actions/            Server Action. 쓰기는 전부 여기서 Prisma를 직접 쓴다
+│   ├── api/                세션 확인, 조회수 배지, 조회수 동기화 크론
+│   ├── rss.xml/ sitemap.xml/ robots.ts
+│   └── opengraph-image.tsx, twitter-image.tsx, icon.tsx, apple-icon.tsx
+├── components/
+│   ├── admin/              PostEditor(작성·수정 공용), postDraft.ts(폼 모델), AdminPostList/Item
+│   ├── blog/               PostCard, PostGrid, Markdown, TableOfContents, Pagination 등
+│   ├── career/             /career 전용
+│   ├── layout/             Header, Footer, Nav, Container, Layout
+│   └── theme/              ThemeProvider, ThemeToggle
+├── lib/                    서버 로직과 순수 함수
+│   ├── posts.ts            모든 읽기 조회. Date → ISO 문자열 변환도 여기서
+│   ├── auth.ts             JWT 세션, requireSession()
+│   ├── site.ts, paths.ts, metadata.ts   사이트 주소, 앱 내부 경로, 페이지 메타데이터
+│   ├── views.ts            Redis 조회수 키와 DB 동기화
+│   └── postCover.tsx, postImage.ts, imageSize.ts, toc.ts, slugify.ts, prisma.ts, redis.ts
+├── data/career.ts          이력서 내용 (DB와 무관)
+├── types/blog.ts           DTO: PostSummary, PostDetail, Category, Series
+└── proxy.ts                /admin/* 인증 (Next 16에서 middleware가 proxy로 개명됨)
+tests/                      Playwright e2e, tests/support/(세션 쿠키, 스냅샷 도구)
+prisma/                     schema.prisma, migrations/, backup.mjs, create-migration.mjs
 ```
 
-- `playwright.config.ts`의 `webServer`가 `npm run dev`(7777)를 띄우거나 이미 떠 있는 서버를 재사용한다.
-- "redirect to login" 테스트 외에는 실제 DB와 로그인 가능한 계정이 필요하다. seed 스크립트는 저장소에 없다(`scripts/`는 gitignore).
-- **2026-09 기준 로그인이 필요한 2개 테스트는 실패한다.** DB에 `beenslab.corp@gmail.com` 계정은 있지만 비밀번호가 `test1234`가 아니다(bcrypt 비교 false). 코드 문제가 아니라 자격증명 불일치이므로, 테스트를 돌리려면 비밀번호를 맞추거나 테스트를 고쳐야 한다.
-- `test-results/`와 `playwright-report/`는 gitignore에 있다.
+## 규칙
 
-## 환경변수 (`.env-example`)
+ESLint가 강제하는 것이 셋 있다. `src/components`는 `@/lib/prisma`, `@/lib/redis`, `@prisma/client`를 import할 수 없다. `src/app`은 `actions/`를 빼고 `@/lib/prisma`를 import할 수 없다. `src` 안에서는 `../` 상대경로 import 대신 `@/`를 쓴다.
 
-- `DATABASE_URL`: 런타임용. **DDL 권한이 없는 앱 전용 롤 `beenslab_app`**으로 붙는다.
-- `DIRECT_URL`: 마이그레이션 전용. 테이블 소유자 `postgres`가 필요하다. **로컬에만 두고 Vercel에는 넣지 않는다**(운영에서 마이그레이션을 돌리지 않으며, `prisma generate`는 이 값 없이도 동작한다).
-- `JWT_SECRET`: 미설정 시 `src/lib/auth.ts`가 하드코딩된 placeholder 키로 서명한다
-- `KV_REST_API_URL`, `KV_REST_API_TOKEN`: 조회수 카운터용 Upstash Redis. Vercel Marketplace 리소스 `beenslab-blog-hits`(도쿄 `hnd1`, free 플랜, autoUpgrade 끔)가 주입하고, `src/lib/redis.ts`의 `Redis.fromEnv()`가 읽는다. 같이 주입되는 `KV_URL`, `KV_REST_API_READ_ONLY_TOKEN`, `REDIS_URL`은 쓰지 않는다.
-- 카운터가 4초쯤 걸린 뒤 500을 내면 Redis 주소에 연결이 안 되는 상황이다. 연결된 리소스가 삭제됐는지 `vercel integration list <project>`로 확인할 것(2026-09에 이전 리소스가 Uninstalled 상태로 방치돼 이 증상이 있었다).
+### 읽기와 쓰기
 
-## 아키텍처
+- 읽기는 `src/lib/posts.ts`의 `React.cache` 함수로만 한다. 공개 조회는 `delete_time: null`과 `status: 'PUBLISHED'`를 함께 거른다. 초안이 필요한 `getAllPostsForAdmin`과 `getPostBySlugForAdmin`은 함수 안에서 `requireSession()`을 호출한다.
+- 공개 목록은 `published_at` 순이다. `published_at`은 초안이 처음 발행될 때만 찍힌다.
+- 쓰기 액션은 `src/app/actions/posts.ts`의 `adminAction()`으로 감싼다. 세션 확인, `{success, data | error}` 형태, `revalidatePath('/', 'layout')`를 이 함수가 한다. Server Action은 그 액션을 import한 라우트로 POST하면 실행된다. 지금은 액션을 import하는 페이지가 모두 `/admin` 아래라 proxy가 먼저 막지만, 공개 페이지가 액션을 import하는 순간 세션 없이 불릴 수 있다. 그래서 새 액션도 반드시 이 함수를 거친다.
+- 저장하기 전에 문자열을 `normalize('NFC')`한다. macOS에서 복사한 한글은 NFD로 들어오고, 커버 이미지를 그리는 Satori는 NFD 자모를 두부(□)로 그린다.
+- 게시글의 `categories`는 카테고리 **keyword** 배열이다. 에디터는 keyword를 id로 바꿔 `categoryIds`로 넘긴다(`draftFromPost`).
+- slug는 제목을 로마자로 바꿔 만든다(`src/lib/slugify.ts`). 제목이 바뀌면 slug도 바뀌고, 옛 slug는 `post_slug_history`에 남아 글 페이지가 308로 넘겨준다. 조회수 Redis 키는 slug 기준이라 제목을 바꾸면 조회수가 0부터 다시 센다.
+- DTO 필드는 DB 컬럼 이름(snake_case)을 그대로 쓴다.
 
-### 읽기 경로: `src/lib/posts.ts` → Prisma, 공개 페이지는 ISR 캐시
+### 캐시와 렌더링
 
-- 공개 페이지, API 라우트, sitemap이 모두 `src/lib/posts.ts`로 조회한다. 함수들은 `React.cache`로 감싸져 한 렌더 안의 중복 쿼리가 없고, 필터와 Date→ISO 문자열 변환도 이 파일 한 곳에서 한다. 새 조회도 여기에 추가할 것. 응답 DTO 타입은 `src/types/blog.ts`.
-- **공개용과 관리자용 조회가 나뉘어 있다.** `getAllPosts`/`getPostBySlug`는 `delete_time: null`에 더해 `status: 'PUBLISHED'`까지 걸러 초안이 새어나가지 않게 한다. 초안이 필요한 곳(`/admin/blog`, 에디터)은 `getAllPostsForAdmin`/`getPostBySlugForAdmin`을 쓰고, **이걸 쓰는 자리는 반드시 `getSession()`을 먼저 확인해야 한다**. `/api/blog/posts/[slug]`가 그 예다(이 경로는 `/admin` 아래가 아니라 proxy가 막아주지 않는다).
-- 공개 목록의 정렬 기준은 `create_time`이 아니라 `published_at`이다. 옛 글을 수정해도 순서가 튀지 않는다.
-- 검색은 서버에서 한다. `/search?q=`가 제목·설명·**본문**을 함께 훑는다(`searchPosts`). 한글은 PostgreSQL 기본 전문검색 파서가 제대로 못 자르므로 `ILIKE '%...%'`를 쓰고 `pg_trgm` GIN 인덱스가 받쳐준다. 검색 결과는 질의마다 달라 `force-dynamic`이고 `noindex`다. **목록(`/blog`)을 정적으로 남기려고 검색을 별도 경로로 뺐다** — 같은 페이지에서 `searchParams`를 읽으면 목록까지 동적이 된다.
-- 목록은 경로 기반 페이지네이션이다. 1페이지는 `/blog`, 2페이지부터 `/blog/page/[n]`이고 둘 다 프리렌더된다. 주소 규칙은 `src/app/(root-layout)/blog/pageHref.ts` 한 곳에 있다.
-- `/blog`, `/category`, `/blog/post/[slug]`는 `revalidate = 3600`인 ISR이고, 글 페이지는 `generateStaticParams`로 빌드 때 모두 생성된다. 글을 바꾸는 Server Action은 `revalidatePath('/', 'layout')`로 모든 페이지 캐시를 무효화한다. 단 sitemap(라우트 핸들러)은 Next 14 캐시가 태그 무효화를 적용하지 않아 최대 1시간 뒤에 갱신된다(로컬 `next start`에서 확인, Vercel은 미확인).
-- 시간이 지나 만료된 캐시는 DB 장애 중에도 이전 페이지를 계속 제공한다(STALE). 반면 `revalidatePath` 직후의 첫 요청은 블로킹 재생성이라, 그때 DB가 죽어 있으면 500이 난다.
-- `/admin/blog`는 최신 목록이 필요해서 `force-dynamic`이다. API 라우트(`/api/blog/posts`, `/api/categories` 등)는 관리자 에디터가 클라이언트에서 호출한다.
-- 게시글의 `categories`는 카테고리 **keyword** 문자열 배열이다(id/title 아님). 필터링은 keyword로 하고, 표시용 title은 `getCategories()` 결과로 매핑하며, 에디터는 keyword→id로 바꿔 액션에 `categoryIds`를 넘긴다.
-- 카테고리는 2026-09에 8개(Javascript/AWS/PostgreSQL 같은 기술 스택 라벨)에서 기술 영역 기준 **4개**(`backend`/`database`/`infra`/`etc`)로 재편했다. 원래 keyword는 각 글의 `tags`로 옮겨서 보존돼 있다(`other`만 정보가 없어 버렸다). 매핑은 `prisma/migrations/20260920020000_reorganize_categories`에 slug로 박혀 있다.
-- 카테고리는 쿼리가 아니라 **실제 경로**다(`/category/[keyword]`). 예전의 `?filter=` 방식은 `useSearchParams` 때문에 정적 렌더링에서 빠졌고, 헤더 네비에 쓰면 모든 페이지가 같이 빠진다. `/category?filter=x`로 들어오면 `/category/x`로 리다이렉트한다.
+- `/`, `/blog`, `/blog/page/[n]`, `/category`, `/category/[keyword]`, `/blog/post/[slug]`는 `revalidate = 3600`인 ISR이고 빌드 때 생성된다. 검색은 `force-dynamic`인 `/search`로 따로 뺐다. 목록 페이지에서 `searchParams`를 읽으면 페이지 전체가 동적이 된다.
+- `/category?filter=x`와 `/admin`의 리다이렉트는 `next.config.js`에 있다. 페이지 안에서 처리하면 `/category`는 동적이 되고 `/admin`은 200으로 응답한다.
+- 공개 경로에 `loading.tsx`를 두거나 페이지를 `<Suspense>`로 감싸지 않는다. 렌더 에러와 `notFound()`가 HTTP 200에 빈 본문(soft 404)으로 나간다. `/admin`에는 `loading.tsx`가 있어서, 관리자 페이지 안의 `notFound()`와 `redirect()`는 200으로 응답한다.
+- SQL로 데이터를 직접 바꾸면 `revalidatePath`가 불리지 않는다. 공개 페이지는 ISR이 만료될 때까지(최대 1시간) 옛 내용을 보여준다.
+- 시간이 지나 만료된 캐시는 DB 장애 중에도 이전 페이지를 계속 내보낸다. 반면 `revalidatePath` 직후의 첫 요청은 블로킹 재생성이라, 그때 DB가 죽어 있으면 500이 난다.
 
-### 쓰기 경로: Server Actions (`src/app/actions/`)
+### 메타데이터와 이미지
 
-- `posts.ts`(create/update/softDelete/permanentlyDelete), `categories.ts`, `auth.ts`가 Prisma를 직접 쓰고 `{success, data | error}`를 반환한다. `categories.ts`는 연결된 UI가 아직 없다(카테고리는 DB에서 직접 관리).
-- Slug는 `src/lib/slugify.ts`가 만든다. 한글 제목은 `@romanize/korean`으로 로마자화한 뒤 slugify하고, 중복이면 `-1`, `-2`… 접미사를 붙인다. 제목이 바뀌면 slug도 새로 생성되지만, 이제 옛 slug가 `post_slug_history`에 남아 글 페이지가 308로 현재 주소에 넘겨준다. `ensureUniqueSlug`는 다른 글의 옛 slug도 피한다.
-- **조회수는 slug를 키로 쓰므로 제목을 바꾸면 여전히 0부터 다시 센다**(Redis 키가 달라진다). 리다이렉트만 해결됐다.
-- `Post.title`의 `@unique`는 제거했다(soft delete된 글까지 제약에 걸려 지운 제목을 재사용할 수 없었다). 식별자 역할은 `slug`가 하고 이쪽이 `@unique`다. 수정 시 `PostOnCategory` 조인 행은 트랜잭션 안에서 전부 지우고 다시 만든다.
-- 새 글의 기본 상태는 `DRAFT`다. 에디터의 '발행' 버튼이 `publish: true`를 넘겨야 공개된다. `published_at`은 초안→발행으로 처음 넘어갈 때만 찍히고, 이미 공개된 글을 수정한다고 갱신되지 않는다.
-- `post.view_count`는 목록 정렬용 사본이다. 실시간 카운팅은 여전히 Redis가 하고, **Vercel Cron이 하루 한 번**(`vercel.json`, 18:00 UTC = 03:00 KST) `/api/cron/sync-views`를 불러 옮긴다. 로직은 `src/lib/viewSync.ts`. 수동으로 돌리려면 `curl -H "Authorization: Bearer $CRON_SECRET" https://blog.beenslab.com/api/cron/sync-views`.
-- **Hobby 플랜은 크론이 하루 1회로 제한된다.** 더 잦은 표현식을 쓰면 배포 자체가 실패한다. 실행 시각도 ±59분 오차가 있다.
-- `vercel.json`에 `regions: ["icn1"]`을 **명시적으로** 넣었다. 원래는 대시보드 설정만 있었는데, vercel.json이 생기면서 리전이 기본값으로 밀릴 여지를 없애기 위해서다. DB가 춘천이라 함수 리전이 바뀌면 지연이 크게 늘어난다.
-- **한글은 NFC로 저장한다.** macOS에서 복사한 텍스트는 자모가 분리된 NFD로 들어오는데, 브라우저는 합쳐서 보여주지만 커버 이미지를 그리는 Satori는 자모 블록(U+1100~U+11FF) 글리프를 못 찾아 제목 전체를 두부(□)로 렌더한다. Server Action이 저장 직전에 `normalize('NFC')`를 건다. 2026-09에 제목 1건·본문 1건이 NFD 상태였고 마이그레이션으로 정리했다.
-- 본문은 `post.contents`에 Markdown으로 저장된다. `src/components/Mdx.tsx`는 이름과 달리 MDX가 아니라 `react-markdown` + `remark-gfm` + `rehype-highlight`이고, 본문의 raw HTML은 렌더링되지 않고 텍스트로 보인다(코드 하이라이트 테마는 `globals.css`의 highlight.js import). 게시글용 이미지는 `public/images/`에 커밋해서 정적 파일로 제공한다.
-- 본문 제목에는 `src/lib/toc.ts`가 id를 붙이고 목차(`TableOfContents`)가 같은 id로 링크한다. **양쪽이 `createHeadingIdFactory()`를 같은 순서로 호출해야 id가 맞는다** — 한쪽만 고치면 앵커가 어긋난다. 본문 `h1`은 h2로 내려서 렌더한다(페이지 제목이 이미 h1이다).
-- RSS 자동발견 `<link>`는 루트 layout의 `<head>`에 직접 박혀 있다. `metadata.alternates.types`에 넣으면 각 페이지가 `alternates.canonical`을 정의하는 순간 통째로 덮인다(OG 이미지와 같은 얕은 병합 문제).
-- 댓글은 giscus다. `NEXT_PUBLIC_GISCUS_*` 네 개가 모두 있어야 켜지고 하나라도 비면 아무것도 그리지 않는다. `NEXT_PUBLIC_*`은 빌드 때 박히므로 값을 넣은 뒤 재배포해야 한다.
-- 마크다운 `![](...)`에는 크기 정보가 없어 그냥 두면 원본을 통째로 받고 레이아웃도 밀린다. `Mdx.tsx`가 `img`를 가로채 `src/lib/imageSize.ts`로 PNG/JPEG 헤더에서 실제 크기를 읽고 `next/image`에 넘긴다(의존성 없이 직접 파싱, `public/` 밖 경로와 외부 URL은 null 반환). 새 이미지 포맷을 쓰려면 이 파서에 추가해야 한다.
-- 테이블은 snake_case(`@@map`)이고, `OauthClient` 모델은 쓰지 않는다(이전 OAuth 연동 잔재).
-
-### 데이터베이스와 마이그레이션
-
-Oracle Cloud 춘천 VM의 PostgreSQL 16.
-
-**권한이 둘로 나뉜다.** 앱은 `beenslab_app` 롤로 붙고 SELECT/INSERT/UPDATE/DELETE만 할 수 있다. DROP·ALTER·CREATE, `pg_read_file`, 롤 생성, `_prisma_migrations` 접근은 전부 막혀 있다. 마이그레이션만 `DIRECT_URL`의 `postgres`로 돈다. 새 테이블은 `ALTER DEFAULT PRIVILEGES`로 권한이 자동으로 붙으므로 마이그레이션 후 따로 GRANT할 필요가 없다.
-
-롤을 다시 만들어야 하면(새 DB 등):
-
-```sql
-CREATE ROLE beenslab_app LOGIN PASSWORD '...' NOSUPERUSER NOCREATEDB NOCREATEROLE;
-GRANT CONNECT ON DATABASE beenslab TO beenslab_app;
-GRANT USAGE ON SCHEMA blog TO beenslab_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA blog TO beenslab_app;
-REVOKE ALL ON TABLE blog._prisma_migrations FROM beenslab_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA blog
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO beenslab_app;
-```
-
-**테이블은 `public`이 아니라 `blog` 스키마에 있고**, 접속 문자열의 `?schema=blog`가 `search_path`를 잡아준다. `pgcrypto`도 `blog` 스키마에 설치돼 있다.
-
-**`prisma migrate dev`를 쓰지 말 것.** 로컬 개발과 프로덕션이 DB 하나를 공유하므로, `migrate dev`는 운영 데이터에 바로 적용되고 드리프트를 감지하면 리셋을 제안한다. 대신 이 흐름을 쓴다:
-
-```bash
-npm run db:backup                      # 스키마 바꾸기 전 덤프 (~/beenslab-blog-backups)
-# schema.prisma 수정
-npm run migrate:new -- add_cover_image # SQL만 생성, DB는 건드리지 않음
-# 생성된 migration.sql 확인 (마음에 안 들면 디렉터리 삭제하면 끝)
-npm run migrate:deploy                 # 적용
-npm run migrate:status                 # 확인
-```
-
-- 마이그레이션은 2026-09-20에 베이스라인을 잡았다. `0_init`은 기존 운영 DB 구조를 그대로 옮겨 적은 것이고, **실행된 적 없이 `migrate resolve --applied`로 기록만 했다**(`_prisma_migrations`의 `applied_steps_count=0`). 빈 DB에 `migrate deploy`를 돌릴 때만 실제로 실행된다.
-- Prisma가 생성한 원본 베이스라인은 `CREATE SCHEMA "public"`이었는데 `"blog"`로 고쳤다. 안 고치면 빈 DB에서 "no schema has been selected to create in"으로 실패한다.
-- 백업은 저장소 밖(`~/beenslab-blog-backups/`)에 둔다. 게시글 본문이 들어있어 git에 들어가면 안 된다.
-- **SQL로 데이터를 직접 바꾸면 Next 캐시는 그대로다.** Server Action을 거칠 때와 달리 `revalidatePath`가 불리지 않아, 배포 후에도 ISR 캐시가 만료될 때까지(최대 1시간) 옛 내용이 섞여 보인다. 2026-09 카테고리 재편 때 글 페이지 일부가 옛 카테고리를 그대로 보여줬다. 급하면 해당 페이지를 한 번씩 열어 재생성시키거나 재배포할 것.
-- 접속은 `sslmode=require`다(2026-09-21). VM의 PostgreSQL에 자체 서명 인증서를 넣고 `ALTER SYSTEM SET ssl = on` + reload로 켰다. 인증서는 `<PGDATA>/server.crt`, `server.key`이고 **키는 반드시 `0600` + `postgres`(uid 70) 소유**여야 한다. 아니면 PostgreSQL이 SSL 활성화를 거부한다.
-- `ssl` 파라미터는 SIGHUP으로 바뀐다. 재시작이 필요 없고 `ALTER SYSTEM RESET ssl` + reload로 즉시 되돌릴 수 있다.
-- **`sslmode=require`는 암호화만 하고 서버 신원은 검증하지 않는다.** 도청은 막지만 적극적 중간자는 남는다. 인증서 SAN에 IP를 넣어뒀으니 나중에 `verify-full`로 갈 수는 있는데, CA 인증서를 Vercel까지 배포해야 한다.
-- **평문 접속은 아직 열려 있다.** `pg_hba.conf` 마지막 줄이 `host all all all scram-sha-256`이다. `hostssl`로 바꾸면 TLS를 강제할 수 있지만, **같은 인스턴스에 `emotion_tree` DB가 함께 있어서** 그쪽 앱까지 TLS로 붙어야 한다. 확인 전에는 바꾸지 말 것.
-- 5432 포트가 공용 인터넷에 열려 있고, 로그에 `postgres`/`keycloak` 계정으로 들어오는 인증 실패 시도가 찍힌다. Vercel Hobby는 고정 IP가 없어 방화벽으로 좁히기 어렵다.
-
-### 인증
-
-- 자체 JWT 방식이다. `actions/auth.ts#login`이 bcrypt로 비교한 뒤 `src/lib/auth.ts`가 `jose`(HS256) JWT를 httpOnly 쿠키 `auth-token`(7일)에 저장한다. 회원가입 기능은 없다(User는 DB에 직접 추가). `src/app/lib/auth.ts.backup`은 이전 NextAuth 설정이고 빌드에 포함되지 않는다.
-- `src/proxy.ts`가 `/admin/:path*`(`/admin/signin` 제외)에서 JWT를 검증하고 리다이렉트한다. Next 16에서 `middleware` 컨벤션이 `proxy`로 개명됐고(파일명·export 이름 모두), `proxy`는 edge가 아니라 Node 런타임에서 돈다. 클라이언트 컴포넌트(Header의 Login/Logout, 에디터)는 `/api/auth/session`으로 로그인 여부와 `userId`를 가져온다.
-- **Server Action은 미들웨어로 보호되지 않는다.** Next 14는 `'use server'` 파일의 export 전부를 그 파일을 import하는 모든 페이지에 등록한다. 예를 들어 `BlogPost.tsx`를 통해 공개 페이지 `/blog`, `/category`에도 `posts.ts`의 액션이 전부 등록된다. 그래서 데이터를 바꾸는 액션(`posts.ts`, `categories.ts`)은 첫머리에서 `getSession()`을 검사해 `{success: false, error: 'Unauthorized'}`를 반환하고, 작성자는 클라이언트 입력이 아니라 세션의 `userId`로 정한다. 새 액션도 같은 패턴을 따를 것.
-
-### 라우트 구성
-
-- 루트 `src/app/layout.tsx`는 CSS를 import하지 않고, route group 레이아웃이 각자 `globals.css`를 import한다. `(root-layout)`은 Header/Footer로 감싸고(관리자 페이지 포함), `(no-layout)`은 `/admin/signin` 전용이다. 새 route group을 만들면 `globals.css` import가 필요하다.
-- 관리자 기능: `/admin/blog`(목록 + 수정/삭제), `/admin/board/editor`(작성), `/admin/board/editor/[slug]`(수정). `/admin` 대시보드는 대부분 동작하지 않는 placeholder다.
-- 조회수: 게시글 페이지가 `/api/blog/count?post_id={slug}&domain=blog.beenslab.com`을 `<Image unoptimized>`로 렌더하면, 이 라우트가 `blog-hits:{domain}:{slug}:total`과 `...:{KST 날짜}`(48시간 TTL) 키를 `INCR` 파이프라인으로 올리고 SVG 배지를 반환한다. `domain`은 `blog.beenslab.com`만, `post_id`는 slug 형식만 허용한다. Edge 런타임은 프로젝트 리전 설정을 따르지 않아 `sin1`(싱가포르)에서 실행됐기 때문에, Node 런타임으로 두어 `icn1`에서 실행되게 한다.
-- `/career`는 DB와 무관한 클라이언트 페이지이고 내용은 전부 `src/data/career.ts`에 있다(메타데이터는 `career/layout.tsx`).
-- SEO: 각 페이지가 `metadata`/`generateMetadata`에 canonical·OpenGraph·Twitter를 직접 정의하고, 게시글 페이지는 JSON-LD를 넣는다. 도메인 `https://blog.beenslab.com`이 metadata·JSON-LD·`robots.ts`·sitemap에 하드코딩돼 있다(`src/types/constants.ts`의 `BASE_URL`은 root layout 메타데이터에서만 쓴다).
-- OG 이미지는 `src/app/opengraph-image.tsx`/`twitter-image.tsx`가 1200×630으로 생성한다(한글도 정상 렌더). **각 페이지는 `images: [{url: '/opengraph-image', ...}]`로 이 라우트를 직접 가리켜야 한다.** Next는 메타데이터를 얕게 병합해서, 자식 세그먼트가 `openGraph`를 정의하면 루트의 파일 컨벤션 이미지까지 통째로 사라진다. 단 **같은 세그먼트**에 둔 파일은 자동 적용된다(글 페이지가 그 경우라 명시 지정을 뺐다).
-- 글 커버는 `src/lib/postCover.tsx`가 제목·카테고리로 그린다. 진입점이 둘이다: `opengraph-image.tsx`(공유용)와 `cover/route.ts`(목록 썸네일용). **파일 컨벤션 쪽 URL에는 빌드마다 바뀌는 해시가 붙어서**(`/opengraph-image-3kwzem`) 코드에서 링크할 수 없기 때문에 고정 주소를 따로 둔 것이다. UI에서는 `getPostThumbnail()`(`src/lib/postImage.ts`)을 쓰면 `cover_image` 유무에 따라 알아서 고른다.
-- 레이아웃에서 페이지 전체를 `<Suspense>`로 감싸지 말 것. 예전에 루트 layout이 그렇게 되어 있어서, 없는 글이나 DB 장애 같은 렌더 에러가 HTTP 200 + 빈 body(soft 404)로 응답됐다. 지금은 없는 글이면 `notFound()`로 404, 렌더 에러면 500이 나간다.
+- 페이지 메타데이터는 `pageMetadata()`로 만든다. Next는 메타데이터를 얕게 병합해서, 자식이 `openGraph`를 정의하면 루트의 파일 컨벤션 OG 이미지가 사라진다. 헬퍼는 `/opengraph-image`를 직접 가리킨다. 같은 세그먼트에 둔 `opengraph-image.tsx`는 자동 적용되므로 글 페이지는 헬퍼를 쓰지 않는다.
+- RSS 자동발견 `<link>`는 루트 layout의 `<head>`에 직접 넣었다. `metadata.alternates.types`에 넣으면 페이지가 `alternates.canonical`을 정의할 때 덮인다.
+- 글 커버는 `src/lib/postCover.tsx`가 그리고 진입점이 둘이다. `opengraph-image.tsx`는 공유용이고, Next가 URL에 해시 접미사(`opengraph-image-3kwzem`)와 쿼리를 붙여서 코드에서 링크하기 어렵다. `cover/route.ts`는 목록 썸네일용 고정 주소다. UI에서는 `getPostThumbnail()`을 쓴다.
+- 본문 `![](...)`에는 크기가 없어서 `Markdown.tsx`가 `src/lib/imageSize.ts`로 PNG/JPEG 헤더를 읽어 `next/image`에 넘긴다. 다른 포맷을 쓰려면 파서에 추가한다. 글 이미지는 `public/images/`에 커밋한다.
+- `Markdown.tsx`는 react-markdown + remark-gfm + rehype-highlight다. 본문의 raw HTML은 텍스트로 보인다. 본문 `h1`은 `h2`로 내려 그린다.
+- 목차 id는 `Markdown.tsx`와 `extractHeadings()`가 `createHeadingIdFactory()`를 같은 순서로 호출해서 맞춘다. 한쪽만 고치면 앵커가 어긋난다.
 
 ### 스타일
 
-- 폭은 `Layout`이 아니라 각 페이지가 `Container`(`src/components/layout/Container.tsx`)로 정한다. 목록은 `page`(72rem), 본문은 `reading`(46rem). 예전에는 `Layout`이 전부 768px로 묶어서 카드 그리드를 못 넣었고 career 페이지의 `max-w-5xl`도 무시됐다.
-- 색은 의미 기반 토큰을 쓴다(`bg-surface`, `text-ink`, `text-ink-muted`, `border-line`, `text-brand-600`). 컴포넌트에 `dark:` 변형을 다시 쓰지 말 것. 다크 모드는 토큰 값만 바꾼다.
-- **다크 모드 토큰 블록은 일부러 `@layer` 밖에 있다.** 이 파일의 `@layer base`가 빌드 결과에서 Tailwind의 `theme` 레이어보다 먼저 나타나 우선순위가 더 낮아지는 바람에, 안에 두면 `:root.dark`로 특정도를 올려도 `@theme`이 내보내는 `:root,:host`의 밝은 값에 계속 밀린다(다크 모드가 통째로 안 먹힘). 레이어 밖 규칙이 모든 레이어를 이기므로 거기서 끝낸다.
-- Tailwind CSS 4다. **설정 파일(`tailwind.config.ts`)이 없다.** 폰트 스택·커스텀 값은 `src/app/globals.css`의 `@theme` 블록에, 플러그인은 `@plugin "@tailwindcss/typography";`로 선언한다. v4는 JS 설정을 자동으로 찾지 않으므로 플러그인 줄을 빠뜨리면 본문 `prose` 스타일이 통째로 사라진다.
-- `globals.css`의 `@import`는 반드시 맨 위에 둘 것. Turbopack CSS 파서가 순서를 어기면 빌드를 실패시킨다.
-- v3의 기본 border 색(`gray-200`)을 유지하려고 `globals.css` 하단에 호환 레이어를 둔다. 색을 지정하지 않은 `border` 클래스들이 여기에 의존한다(주로 `src/components/career/*`).
-- 한글 폰트는 Pretendard 동적 서브셋을 jsDelivr CDN에서 불러온다(`src/app/layout.tsx`). `fontFamily.mono` 스택 뒤쪽에도 Pretendard를 넣어, 등폭 폰트에 글리프가 없는 한글만 폴백되게 한다.
+- Tailwind 4이고 설정 파일이 없다. 폰트와 토큰은 `src/app/globals.css`의 `@theme`에 있고, 플러그인은 `@plugin "@tailwindcss/typography";`로 불러온다. 이 줄이 빠지면 본문 `prose` 스타일이 전부 사라진다.
+- `globals.css`의 `@import`는 맨 위에 둔다. Turbopack CSS 파서는 순서를 어기면 빌드를 실패시킨다.
+- 색은 의미 토큰(`bg-surface`, `text-ink`, `text-ink-muted`, `border-line`, `text-brand-600`)을 쓰고 `dark:` 변형을 새로 쓰지 않는다. 다크 모드 토큰 블록은 일부러 `@layer` 밖에 있다. 안에 두면 `@theme`이 내보내는 밝은 값에 밀려 다크 모드가 통째로 안 먹는다.
+- `globals.css` 하단의 호환 레이어가 v3 기본 border 색(`gray-200`)을 유지한다. 색을 지정하지 않은 `border` 클래스(주로 `src/components/career/*`)가 여기에 의존한다.
+- 폭은 페이지가 `Container`로 정한다(목록 72rem, 본문 46rem).
+- 루트 `src/app/layout.tsx`는 CSS를 import하지 않는다. route group layout, `not-found.tsx`, `error.tsx`가 각자 import한다.
 
-### 사용하지 않는 잔재
+### 인증
 
-MDX+contentlayer(GitHub Pages) → 외부 백엔드 API + NextAuth OAuth → 현재 구조(2026-01)로 옮겨온 흔적. 의존성(`firebase`, `axios`, `recoil`, `shiki`, `rehype-pretty-code`, `@types/next-auth`), `next-contentlayer` override, `styledComponents` 옵션, 동작하지 않던 `deploy`/`predeploy` 스크립트는 2026-09에 제거했다. 남은 것: `src/data/category.ts`(카테고리는 DB로 이동), `src/app/lib/auth.ts.backup`(이전 NextAuth 설정, 빌드 미포함), `OauthClient` 모델.
+- `actions/auth.ts#login`이 bcrypt로 비교하고, `src/lib/auth.ts`가 jose(HS256) JWT를 httpOnly 쿠키 `auth-token`(7일)에 넣는다. 회원가입은 없고 User는 DB에 직접 넣는다.
+- `JWT_SECRET`이 없으면 서명과 검증이 에러를 낸다. 대체 키는 없다.
+- `src/proxy.ts`는 edge가 아니라 Node 런타임에서 돈다. 헤더의 Logout 버튼은 `/api/auth/session`으로 로그인 여부를 확인한다.
+
+### 조회수
+
+- 글 페이지가 `/api/blog/count?post_id={slug}&domain=blog.beenslab.com`을 `<Image unoptimized>`로 그리면, 라우트가 Redis의 total 키와 KST 날짜 키(48시간 TTL)를 `INCR`하고 SVG 배지를 돌려준다. 키 형식은 `src/lib/views.ts`에 있다.
+- 이 라우트는 Node 런타임이어야 한다. Edge 런타임은 프로젝트 리전 설정을 따르지 않아 `sin1`(싱가포르)에서 돌았다.
+- `post.view_count`는 인기 글 정렬용 사본이다. Vercel Cron이 하루 한 번(`vercel.json`, 18:00 UTC = 03:00 KST) `/api/cron/sync-views`로 옮긴다. Hobby 플랜은 크론을 하루 1회로 제한하고(더 잦으면 배포가 실패한다) 실행 시각에 ±59분 오차가 있다. 수동 실행은 `curl -H "Authorization: Bearer $CRON_SECRET" https://blog.beenslab.com/api/cron/sync-views`.
+- 카운터가 4초쯤 걸리다 500을 내면 Redis에 연결되지 않는 상태다. `vercel integration list <project>`로 연결된 리소스(`beenslab-blog-hits`, 도쿄 `hnd1`)가 살아 있는지 본다.
+
+### 테스트
+
+- `tests/support/session.ts`가 `.env`의 `JWT_SECRET`으로 관리자 쿠키를 만든다. 실제 비밀번호 로그인 테스트는 `E2E_ADMIN_EMAIL`과 `E2E_ADMIN_PASSWORD`가 있을 때만 돈다.
+- 글 페이지를 브라우저로 여는 테스트를 쓰지 않는다. 조회수 배지가 운영 Redis를 올린다. 공개 페이지는 `request` fixture로 받는다.
+- 테스트도 운영 DB를 읽는다. 저장 버튼을 누르는 테스트를 쓰지 않는다.
+
+### 코드 스타일
+
+- Prettier: 4칸 들여쓰기, single quote, `{foo}`(bracketSpacing false), printWidth 100.
+- 코드 주석은 영어로 쓰고, 코드가 보여주지 못하는 이유만 적는다. 문서와 UI 문구는 한국어다.
+- 컴포넌트 파일은 PascalCase, `lib`의 파일은 camelCase다. 앱 내부 경로는 `src/lib/paths.ts`, 사이트 주소는 `src/lib/site.ts`로 만든다.
+- 커밋 메시지는 Conventional Commits 형식에 한국어 요약이다(`refactor: ...`, `fix: ...`).
+
+## 인프라
+
+- DB는 Oracle Cloud 춘천 VM의 도커 PostgreSQL 16이다(컨테이너 `postgres`, `ssh emotiontree`). 같은 인스턴스에 `emotion_tree` DB가 있으니 서버 전역 설정을 바꾸지 않는다. 테이블은 `public`이 아니라 `blog` 스키마에 있고, 접속 문자열의 `?schema=blog`가 `search_path`를 잡는다.
+- 로컬 개발과 운영이 DB 하나를 공유한다. 스키마 변경은 db-migration 스킬을 따른다.
+- 앱은 DML만 가능한 `beenslab_app` 롤로 붙는다. 마이그레이션과 백업은 `DIRECT_URL`의 테이블 소유자 `postgres`로 돈다.
+- 접속은 `sslmode=require`다. 암호화는 되지만 서버 신원은 검증하지 않는다. `pg_hba.conf` 마지막 줄이 아직 `host`라 평문 접속도 열려 있다. `hostssl`로 바꾸기 전에 `emotion_tree` 쪽 앱이 TLS로 붙는지 확인해야 한다. 5432 포트는 공용 인터넷에 열려 있다(Vercel Hobby는 고정 IP가 없다).
+- Vercel 프로젝트 이름은 `beenchangseo-github-io`이고, Git 연동으로 `main`에 push하면 Production에 배포된다. `DATABASE_URL`이 Production에만 있어서 다른 브랜치의 Preview 빌드는 prerender 단계에서 DB에 붙지 못한다(2026-10 `vercel env ls` 기준).
+- Vercel 함수 리전은 `vercel.json`의 `regions: ["icn1"]`(서울)이다. 캐시되지 않은 렌더링은 DB를 거치므로 리전이 바뀌면 지연이 크게 는다.
+- DNS는 Cloudflare다. `blog` 레코드는 프록시를 끈 상태(DNS only)로 둔다. 프록시를 켜면 한국 방문자가 Cloudflare LA를 거쳐 약 0.7초 느려진다(2026-09 측정).
+
+## 환경변수 (`.env-example`)
+
+| 이름 | 용도 |
+| --- | --- |
+| `DATABASE_URL` | 런타임. `beenslab_app` 롤 |
+| `DIRECT_URL` | 마이그레이션과 백업. 로컬에만 두고 Vercel에는 넣지 않는다 |
+| `JWT_SECRET` | 세션 서명. 필수 |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | 조회수 Redis. Vercel Marketplace 리소스가 주입하고 `Redis.fromEnv()`가 읽는다 |
+| `CRON_SECRET` | 조회수 동기화 크론 인증. 없으면 라우트가 503 |
+
+## 남은 것
+
+- `OauthClient` 모델(`oauth_client` 테이블)은 쓰지 않는 이전 OAuth 연동 잔재다. 지우려면 테이블을 DROP하는 마이그레이션이 필요하다.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
