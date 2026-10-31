@@ -4,7 +4,6 @@ import Container from '@/components/layout/Container';
 import TableOfContents from '@/components/blog/TableOfContents';
 import ShareButtons from '@/components/blog/ShareButtons';
 import PostCard from '@/components/blog/PostCard';
-import Comments from '@/components/blog/Comments';
 import {extractHeadings} from '@/lib/toc';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -282,8 +281,6 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                         )}
                     </nav>
                 )}
-
-                <Comments />
 
                 {related.length > 0 && (
                     <section className="mt-16 border-t border-line pt-10">
