@@ -31,7 +31,7 @@ npm run migrate:new -- <이름> / migrate:deploy / migrate:status
 
 `.claude/settings.json`에 있다. 동작을 바꾸려면 `.claude/hooks/`의 스크립트를 고친다.
 
-- Bash에서 `prisma migrate dev`, `prisma migrate reset`, `prisma db push`를 실행하면 막힌다.
+- Bash에서 `prisma migrate dev`, `prisma migrate reset`, `prisma db push`를 실행하면 막힌다. 정규식이 까다로우니 고칠 때는 `.claude/hooks/guard-bash.test.mjs`에 케이스를 더하고 `npm run test:hooks`(`check`에 포함)로 확인한다.
 - 파일을 고치면 그 파일에 prettier를 돌리고, eslint 결과(경고 포함)를 돌려준다.
 - 턴을 끝낼 때 바뀐 `.ts`/`.tsx`가 있으면 `npm run typecheck`를 돌리고, 실패하면 끝내지 않는다.
 

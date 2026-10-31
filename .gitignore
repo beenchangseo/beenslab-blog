@@ -56,3 +56,4 @@ playwright-report
 
 # claude code personal overrides
 .claude/settings.local.json
+.claude/worktrees/
