@@ -1,6 +1,3 @@
-// Stop: runs the type check when TypeScript files changed, and sends Claude back to
-// fix errors instead of ending the turn. On a repeated stop it only reports, so a
-// failure Claude cannot fix does not loop.
 import {spawnSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 
@@ -19,6 +16,8 @@ if (check.status === 0) process.exit(0);
 const lines = `${check.stdout}${check.stderr}`.trim().split('\n');
 const tsErrors = lines.filter((line) => line.includes('error TS'));
 const errors = (tsErrors.length > 0 ? tsErrors : lines).slice(0, 40).join('\n');
+// stop_hook_active is set when Claude is already continuing from an earlier block;
+// blocking again would loop.
 const output = input.stop_hook_active
     ? {systemMessage: `typecheck still failing:\n${errors}`}
     : {

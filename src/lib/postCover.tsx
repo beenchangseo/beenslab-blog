@@ -4,10 +4,6 @@ import {AUTHOR_NAME, SITE_HOST} from '@/lib/site';
 
 export const COVER_SIZE = {width: 1200, height: 630};
 
-// 글 제목이 들어간 커버 이미지를 만든다. 두 군데서 쓴다.
-//   - opengraph-image.tsx: 공유용 OG 이미지 (URL에 빌드 해시가 붙어 불안정)
-//   - cover/route.ts:      목록 카드 썸네일 (주소가 고정이라 링크할 수 있다)
-// 같은 그림을 쓰므로 카드와 공유 미리보기가 어긋나지 않는다.
 export async function renderPostCover(slug: string) {
     const [post, categories] = await Promise.all([getPostBySlug(slug), getCategories()]);
 
@@ -16,7 +12,6 @@ export async function renderPostCover(slug: string) {
         ? categories.find((c) => c.keyword === post.categories[0])?.title ?? ''
         : '';
 
-    // 제목이 길수록 글자를 줄여야 630px 안에 들어간다.
     const fontSize = title.length > 46 ? 56 : title.length > 28 ? 68 : 80;
 
     return new ImageResponse(
@@ -56,7 +51,6 @@ export async function renderPostCover(slug: string) {
                         fontSize,
                         fontWeight: 700,
                         lineHeight: 1.25,
-                        // 4줄을 넘기면 잘라서 레이아웃이 깨지지 않게 한다.
                         maxHeight: 4 * fontSize * 1.25,
                         overflow: 'hidden',
                     }}

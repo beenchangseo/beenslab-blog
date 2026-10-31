@@ -1,7 +1,5 @@
 'use client';
 
-// 렌더 에러 경계. DB 장애처럼 서버 렌더가 실패했을 때 여기로 떨어진다.
-// 루트 layout.tsx가 CSS를 import하지 않으므로 여기서 직접 가져온다.
 import './globals.css';
 import {useEffect} from 'react';
 import Link from 'next/link';

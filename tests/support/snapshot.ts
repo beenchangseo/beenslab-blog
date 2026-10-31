@@ -1,11 +1,3 @@
-// Records what a running build serves, so two builds can be diffed with `diff -r`.
-//
-//   node --env-file=.env --import tsx tests/support/snapshot.ts http://localhost:7777 <outDir>
-//
-// The app shares one database with production, so nothing here may write.
-// /api/blog/count is never requested because it increments production view counters,
-// and every Server Action request is either aborted or rewritten to a post id that
-// does not exist.
 import {createHash} from 'node:crypto';
 import {mkdirSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
@@ -129,8 +121,6 @@ async function readEditor(page: Page) {
     });
 }
 
-// Clicks a save button and returns the Server Action arguments it would have sent.
-// The request is aborted, so the action never runs.
 async function interceptSave(page: Page, button: RegExp) {
     let body: string | null = null;
     await page.route('**/*', async (route) => {
@@ -228,9 +218,6 @@ function classifyDeleteAlert(message: string | null): string | null {
     return `other: ${message.slice(0, 120)}`;
 }
 
-// Calls softDeletePost from /admin/blog with and without a session. The post id in
-// the request is swapped for one that does not exist, so nothing can be deleted.
-// Without a session, proxy redirects the action POST before the action runs.
 async function probeDeleteGuard(context: BrowserContext, withSession: boolean) {
     const page = await context.newPage();
     await page.goto(`${base}/admin/blog`);

@@ -1,5 +1,3 @@
-// 루트 layout.tsx는 CSS를 import하지 않으므로(route group 레이아웃이 각자 한다)
-// 이 파일이 직접 globals.css와 Header/Footer를 가져온다.
 import './globals.css';
 import Link from 'next/link';
 import Layout from '@/components/layout/Layout';

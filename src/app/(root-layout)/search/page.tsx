@@ -6,14 +6,11 @@ import PostGrid from '@/components/blog/PostGrid';
 import SearchForm from '@/components/blog/SearchForm';
 import Pagination from '@/components/blog/Pagination';
 
-// 검색 결과는 질의마다 달라서 정적으로 만들 수 없다. 목록(/blog)은 그대로
-// 정적으로 남겨두려고 검색만 별도 경로로 뺐다.
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
     title: '검색 - ChangBeen Seo',
     description: '블로그 글을 제목, 설명, 본문에서 찾습니다.',
-    // 검색 결과 페이지는 색인 대상이 아니다.
     robots: {index: false, follow: true},
 };
 

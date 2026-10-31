@@ -19,7 +19,6 @@ export default function ShareButtons({url, title}: Props) {
             setCopied(true);
             window.setTimeout(() => setCopied(false), 2000);
         } catch (error) {
-            // 클립보드는 https나 localhost에서만 동작하고 권한도 거절될 수 있다.
             console.error('Failed to copy link:', error);
         }
     }

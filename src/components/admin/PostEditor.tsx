@@ -95,7 +95,6 @@ export default function PostEditor({target, initial, categories, seriesList}: Pr
                 alert(copy.published);
                 router.push(postPath(result.data.slug));
             } else {
-                // Drafts are not on the public pages, so go back to the admin list.
                 alert('초안으로 저장했습니다.');
                 router.push('/admin/blog');
             }

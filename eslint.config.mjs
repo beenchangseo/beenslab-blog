@@ -2,9 +2,6 @@ import {defineConfig} from 'eslint/config';
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 import nextTypescript from 'eslint-config-next/typescript';
 
-// Next 16 removed `next lint`, so `npm run lint` runs the ESLint CLI on this flat config.
-// ESLint stays on 9.x: the eslint-plugin-react bundled with eslint-config-next breaks on 10.
-
 const noParentImports = {
     group: ['../*'],
     message: "Import through the '@/' alias instead of a parent-relative path.",

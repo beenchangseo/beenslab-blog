@@ -12,9 +12,8 @@ type PageMetadataInput = {
     type?: 'website' | 'profile';
 };
 
-// Next merges metadata shallowly: once a page defines openGraph, the root
-// opengraph-image file convention no longer applies to it. Every page therefore
-// points at the image routes directly, and this is the one place that does it.
+// Next merges metadata shallowly: a page that defines openGraph loses the root
+// opengraph-image file convention, so the image routes are named explicitly.
 export function pageMetadata({
     title,
     description,

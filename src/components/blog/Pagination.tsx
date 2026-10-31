@@ -3,7 +3,6 @@ import Link from 'next/link';
 type Props = {
     current: number;
     totalPages: number;
-    // 1페이지와 그 이후의 주소 모양이 달라서 함수로 받는다.
     hrefFor: (page: number) => string;
 };
 

@@ -23,10 +23,8 @@ export default async function Home() {
     const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
 
     const latest = posts.slice(0, 6);
-    // 글이 19개뿐이라 메모리에서 정렬한다. 많아지면 쿼리로 옮길 것.
     const popular = [...posts].sort((a, b) => b.view_count - a.view_count).slice(0, 3);
 
-    // 시리즈별로 묶어 편 순서대로 세운다.
     const seriesMap = new Map<string, {title: string; posts: typeof posts}>();
     for (const post of posts) {
         if (!post.series) continue;

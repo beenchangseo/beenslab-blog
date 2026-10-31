@@ -43,7 +43,6 @@ test('a session opens the admin list, survives navigation, and logs out', async 
     await expect(page).toHaveURL('/admin/signin');
 });
 
-// The password lives only in the database, so this runs only when it is provided.
 test('signing in with the real account lands on the admin list', async ({page}) => {
     const email = process.env.E2E_ADMIN_EMAIL;
     const password = process.env.E2E_ADMIN_PASSWORD;

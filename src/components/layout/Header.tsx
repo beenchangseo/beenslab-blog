@@ -31,7 +31,6 @@ export default function Header({categories = []}: {categories?: Category[]}) {
     }, []);
 
     useEffect(() => {
-        // 같은 값으로 set하면 React가 리렌더를 건너뛰므로 스크롤마다 렌더되지 않는다.
         const handleScroll = () => setIsScrolled(window.scrollY > 0);
         handleScroll();
         window.addEventListener('scroll', handleScroll, {passive: true});
@@ -46,7 +45,6 @@ export default function Header({categories = []}: {categories?: Category[]}) {
         };
         window.addEventListener('keydown', handleKeyDown);
 
-        // 메뉴가 화면을 덮는 동안 뒤 배경이 스크롤되지 않게 막는다.
         const {overflow} = document.body.style;
         document.body.style.overflow = 'hidden';
 
@@ -73,8 +71,6 @@ export default function Header({categories = []}: {categories?: Category[]}) {
 
                 <div className="flex shrink-0 items-center gap-4">
                     <ThemeToggle />
-                    {/* 로그인 버튼은 방문자에게 보일 이유가 없다. /admin으로 가면
-                        proxy가 로그인 화면으로 보낸다. 로그아웃만 노출한다. */}
                     {isLoggedIn && (
                         <button
                             type="button"

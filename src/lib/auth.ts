@@ -12,9 +12,6 @@ export interface SessionPayload {
     expiresAt: Date;
 }
 
-// Read on every call instead of at import so `next build` does not need the secret.
-// There is no fallback key: a missing secret must fail rather than sign tokens
-// with a value anyone can read in this repository.
 function secretKey(): Uint8Array {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -64,8 +61,6 @@ export async function getSession(): Promise<SessionPayload | null> {
     return token ? verifyToken(token) : null;
 }
 
-// For admin pages and admin-only reads. proxy.ts already guards /admin, so this is
-// the second check for code that would leak drafts if it ran without a session.
 export async function requireSession(): Promise<SessionPayload> {
     const session = await getSession();
     if (!session) {

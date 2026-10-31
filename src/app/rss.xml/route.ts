@@ -5,7 +5,6 @@ import {SITE_URL, absoluteUrl} from '@/lib/site';
 
 export const revalidate = 3600;
 
-// XML에 그대로 넣으면 안 되는 문자들. 제목에 &나 <가 들어가면 피드가 깨진다.
 function escapeXml(value: string): string {
     return value
         .replace(/&/g, '&amp;')

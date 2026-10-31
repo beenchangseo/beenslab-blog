@@ -19,11 +19,8 @@ const includeRelations = {
 
 type PostWithRelations = Prisma.PostGetPayload<{include: typeof includeRelations}>;
 
-// 공개 페이지가 보는 조건. 초안과 soft delete된 글은 절대 나가면 안 된다.
 const publicWhere = {delete_time: null, status: 'PUBLISHED'} satisfies Prisma.PostWhereInput;
 
-// 공개 목록은 작성 시각이 아니라 공개 시각 순이다. 과거 글을 나중에 손봐도
-// 순서가 튀지 않고, 예약 발행을 붙일 때도 이 컬럼을 그대로 쓴다.
 const publicOrder = [
     {published_at: 'desc'},
     {create_time: 'desc'},
@@ -60,8 +57,6 @@ function toDetailDto(post: PostWithRelations): PostDetail {
     };
 }
 
-// Shared by pages and API routes. Dates are serialized to ISO strings so the
-// results can be passed to client components and returned as JSON unchanged.
 export const getAllPosts = cache(async (): Promise<PostSummary[]> => {
     const posts = await prisma.post.findMany({
         where: publicWhere,
@@ -81,8 +76,6 @@ export const getPostBySlug = cache(async (slug: string): Promise<PostDetail | nu
     return post ? toDetailDto(post) : null;
 });
 
-// 관리자용. 초안까지 보여주고, 방금 손댄 글이 위로 오도록 수정 시각 순이다.
-// 초안이 새지 않도록 세션 확인을 호출하는 쪽에 맡기지 않고 여기서 한다.
 export const getAllPostsForAdmin = cache(async (): Promise<PostSummary[]> => {
     await requireSession();
     const posts = await prisma.post.findMany({
@@ -94,7 +87,6 @@ export const getAllPostsForAdmin = cache(async (): Promise<PostSummary[]> => {
     return posts.map(toListDto);
 });
 
-// 에디터가 초안을 열 수 있어야 하므로 status로 거르지 않는다.
 export const getPostBySlugForAdmin = cache(async (slug: string): Promise<PostDetail | null> => {
     await requireSession();
     const post = await prisma.post.findFirst({
@@ -105,8 +97,6 @@ export const getPostBySlugForAdmin = cache(async (slug: string): Promise<PostDet
     return post ? toDetailDto(post) : null;
 });
 
-// 제목이 바뀌면 slug가 새로 생성돼 옛 URL이 깨진다. 예전 slug로 들어온
-// 요청을 현재 slug로 넘겨주기 위한 조회.
 export const getSlugRedirect = cache(async (oldSlug: string): Promise<string | null> => {
     const history = await prisma.postSlugHistory.findUnique({
         where: {old_slug: oldSlug},
@@ -169,9 +159,9 @@ export const getPublishedPostCount = cache(() => prisma.post.count({where: publi
 
 export const getPostPage = cache((page: number) => findPublicPage(publicWhere, page));
 
-// 제목·설명·본문을 함께 찾는다. 한글은 PostgreSQL 기본 전문검색 파서가
-// 제대로 못 자르므로 ILIKE로 부분 일치를 보고, pg_trgm GIN 인덱스가 그걸
-// 받쳐준다(20260920120553_add_trigram_search).
+// PostgreSQL's default text-search parser cannot split Korean words, so search uses
+// ILIKE substring matching, backed by the pg_trgm GIN index from
+// 20260920120553_add_trigram_search.
 export const searchPosts = cache(async (query: string, page = 1): Promise<PostPage> => {
     const q = query.trim();
     if (!q) {

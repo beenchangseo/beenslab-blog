@@ -1,9 +1,8 @@
 import type {CreatePostInput} from '@/app/actions/posts';
 import type {PostDetail, Category, Series} from '@/types/blog';
 
-// What the editor form holds while typing. Kept apart from PostEditor because that
-// file is a client module, and the server pages that build the initial draft cannot
-// import values from it.
+// Not in PostEditor.tsx: values exported from a 'use client' module reach server
+// components only as client references, so the server pages could not use them.
 export type PostDraft = {
     title: string;
     description: string;
@@ -26,7 +25,6 @@ export const EMPTY_DRAFT: PostDraft = {
     seriesOrder: '',
 };
 
-// Posts reference categories by keyword and series by slug, but the actions take ids.
 export function draftFromPost(
     post: PostDetail,
     categories: Category[],

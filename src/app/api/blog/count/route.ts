@@ -3,13 +3,11 @@ import {redis} from '@/lib/redis';
 import {SITE_HOST} from '@/lib/site';
 import {dailyViewsKey, totalViewsKey} from '@/lib/views';
 
-// Runs on the Node.js runtime so it executes in the project's function region (icn1).
 export const dynamic = 'force-dynamic';
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DAILY_KEY_TTL_SECONDS = 60 * 60 * 48;
 
-// "Today" follows Korean time so the daily count resets at midnight KST.
 function getTodayDate(): string {
     return new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Seoul'}).format(new Date());
 }
@@ -47,7 +45,6 @@ export async function GET(request: Request) {
         const totalKey = totalViewsKey(postId);
         const dailyKey = dailyViewsKey(postId, getTodayDate());
 
-        // INCR is atomic, so concurrent views are not lost.
         const [totalHits, todayHits] = await redis
             .pipeline()
             .incr(totalKey)

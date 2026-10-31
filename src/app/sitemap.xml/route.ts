@@ -14,7 +14,6 @@ export async function GET() {
                 ? new Date(Math.max(...posts.map((p) => new Date(p.update_time).getTime())))
                 : new Date();
 
-        // 2페이지부터의 목록도 색인 대상이다(1페이지는 위의 /blog가 담당).
         const totalPages = pageCount(posts.length);
         const pageUrls = Array.from({length: Math.max(0, totalPages - 1)}, (_, i) => i + 2)
             .map(

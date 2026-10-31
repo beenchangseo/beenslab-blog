@@ -1,6 +1,5 @@
-// /admin/blog는 force-dynamic이라 DB 응답을 기다리는 동안 빈 화면이 보인다.
-// 공개 경로에는 loading.tsx를 두지 않는다. Suspense 경계가 생기면 렌더 에러가
-// 200 + 빈 본문(soft 404)으로 나가던 과거 문제가 다시 생기기 때문이다.
+// Keep loading.tsx off public routes. A Suspense fallback commits the response to 200
+// before the page runs, so notFound() and render errors can no longer set 404 or 500.
 export default function AdminLoading() {
     return (
         <div className="py-20 flex flex-col gap-4" aria-busy="true" aria-live="polite">

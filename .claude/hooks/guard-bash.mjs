@@ -1,12 +1,10 @@
-// PreToolUse(Bash): refuses Prisma commands that write to the database outside the
-// reviewed migration flow. Local development and production share one database.
 import {readFileSync} from 'node:fs';
 
 const input = JSON.parse(readFileSync(0, 'utf8'));
 const command = input.tool_input?.command ?? '';
 
-// Only where a command starts (line start, after ; & | or a subshell paren), so text
-// that merely mentions these commands, such as a heredoc writing docs, still runs.
+// Matches only where a command starts, so text that merely mentions these commands
+// (a heredoc writing docs, a commit message) still runs.
 const AT_COMMAND = String.raw`(?:^|[;&|(\n])\s*(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+|bunx\s+)?prisma\s+`;
 
 const BLOCKED = [

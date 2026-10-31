@@ -6,8 +6,6 @@ export type PostSeries = {
     order: number | null;
 };
 
-// 목록용 DTO는 클라이언트 컴포넌트로 통째로 내려가므로 최소한만 담는다.
-// tags는 글 하나에 20개씩 붙어 있는 경우가 있어 목록에는 넣지 않는다.
 export type PostSummary = {
     id: string;
     slug: string;
