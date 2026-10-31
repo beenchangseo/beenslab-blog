@@ -5,7 +5,10 @@ const command = input.tool_input?.command ?? '';
 
 // Matches only where a command starts, so text that merely mentions these commands
 // (a heredoc writing docs, a commit message) still runs.
-const AT_COMMAND = String.raw`(?:^|[;&|(\n])\s*(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+|bunx\s+)?prisma\s+`;
+// Also covers `env A=1 prisma`, `A=1 prisma`, and a path such as node_modules/.bin/prisma.
+const AT_COMMAND =
+    String.raw`(?:^|[;&|(\n])\s*(?:env\s+)?(?:\w+=\S*\s+)*` +
+    String.raw`(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+|bunx\s+)?(?:\S*/)?prisma\s+`;
 
 const BLOCKED = [
     {
