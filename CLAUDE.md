@@ -137,7 +137,7 @@ ESLint가 강제하는 것이 셋 있다. `src/components`는 `@/lib/prisma`, `@
 - 로컬 개발과 운영이 DB 하나를 공유한다. 스키마 변경은 db-migration 스킬을 따른다.
 - 앱은 DML만 가능한 `beenslab_app` 롤로 붙는다. 마이그레이션과 백업은 `DIRECT_URL`의 테이블 소유자 `postgres`로 돈다.
 - 접속은 `sslmode=require`다. 암호화는 되지만 서버 신원은 검증하지 않는다. `pg_hba.conf` 마지막 줄이 아직 `host`라 평문 접속도 열려 있다. `hostssl`로 바꾸기 전에 `emotion_tree` 쪽 앱이 TLS로 붙는지 확인해야 한다. 5432 포트는 공용 인터넷에 열려 있다(Vercel Hobby는 고정 IP가 없다).
-- Vercel 프로젝트 이름은 `beenchangseo-github-io`이고, Git 연동으로 `main`에 push하면 Production에 배포된다. `DATABASE_URL`이 Production에만 있어서 다른 브랜치의 Preview 빌드는 prerender 단계에서 DB에 붙지 못한다(2026-10 `vercel env ls` 기준).
+- Vercel 프로젝트 이름은 `beenchangseo-github-io`이고, Git 연동으로 `main`에 push하면 Production에 배포된다. 다른 브랜치는 `vercel.json`의 `git.deploymentEnabled`가 빌드하지 않게 막는다. `DATABASE_URL`이 Production에만 있어서 Preview 빌드는 prerender 단계에서 실패하기 때문이다. 패턴은 minimatch라 `*`는 `fix/...`처럼 `/`가 든 브랜치에 맞지 않으므로 `**`를 쓴다.
 - Vercel 함수 리전은 `vercel.json`의 `regions: ["icn1"]`(서울)이다. 캐시되지 않은 렌더링은 DB를 거치므로 리전이 바뀌면 지연이 크게 는다.
 - DNS는 Cloudflare다. `blog` 레코드는 프록시를 끈 상태(DNS only)로 둔다. 프록시를 켜면 한국 방문자가 Cloudflare LA를 거쳐 약 0.7초 느려진다(2026-09 측정).
 
