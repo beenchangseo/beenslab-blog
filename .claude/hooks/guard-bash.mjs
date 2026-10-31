@@ -4,11 +4,12 @@ const input = JSON.parse(readFileSync(0, 'utf8'));
 const command = input.tool_input?.command ?? '';
 
 // Matches only where a command starts, so text that merely mentions these commands
-// (a heredoc writing docs, a commit message) still runs.
-// Also covers `env A=1 prisma`, `A=1 prisma`, and a path such as node_modules/.bin/prisma.
-const AT_COMMAND =
-    String.raw`(?:^|[;&|(\n])\s*(?:env\s+)?(?:\w+=\S*\s+)*` +
-    String.raw`(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+|bunx\s+)?(?:\S*/)?prisma\s+`;
+// (a heredoc writing docs, a commit message) still runs. A `sh -c "..."` argument
+// counts as a command start.
+const START = String.raw`(?:^|[;&|(\n]|\b(?:ba|z)?sh\s+-\w*c\s+["'])\s*`;
+const PREFIXES = String.raw`(?:(?:time|sudo|exec|command|nohup)\s+)*(?:env\s+)?(?:\w+=\S*\s+)*`;
+const RUNNER = String.raw`(?:npx(?:\s+-\S+)*\s+|npm\s+exec(?:\s+-\S+)*\s+(?:--\s+)?|pnpm\s+(?:exec\s+|dlx\s+)?|yarn\s+(?:dlx\s+)?|bunx\s+)?`;
+const AT_COMMAND = START + PREFIXES + RUNNER + String.raw`(?:\S*/)?prisma(?:@\S+)?\s+`;
 
 const BLOCKED = [
     {
