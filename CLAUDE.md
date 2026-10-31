@@ -84,6 +84,7 @@ ESLint가 강제하는 것이 셋 있다. `src/components`는 `@/lib/prisma`, `@
 - `/`, `/blog`, `/blog/page/[n]`, `/category`, `/category/[keyword]`, `/blog/post/[slug]`는 `revalidate = 3600`인 ISR이고 빌드 때 생성된다. 검색은 `force-dynamic`인 `/search`로 따로 뺐다. 목록 페이지에서 `searchParams`를 읽으면 페이지 전체가 동적이 된다.
 - `/category?filter=x`와 `/admin`의 리다이렉트는 `next.config.js`에 있다. 페이지 안에서 처리하면 `/category`는 동적이 되고 `/admin`은 200으로 응답한다.
 - 공개 경로에 `loading.tsx`를 두거나 페이지를 `<Suspense>`로 감싸지 않는다. 렌더 에러와 `notFound()`가 HTTP 200에 빈 본문(soft 404)으로 나간다. `/admin`에는 `loading.tsx`가 있어서, 관리자 페이지 안의 `notFound()`와 `redirect()`는 200으로 응답한다.
+- `(root-layout)` 안의 `notFound()`는 `(root-layout)/not-found.tsx`가 그룹 레이아웃 안에 그린다. 루트 `app/not-found.tsx`는 일치하지 않는 URL에만 쓰이고 헤더가 없는 루트 레이아웃 아래에 그려지므로 `Layout`으로 감싼다. 그룹 쪽에서도 `Layout`으로 감싸면 헤더와 푸터가 두 번 나온다.
 - SQL로 데이터를 직접 바꾸면 `revalidatePath`가 불리지 않는다. 공개 페이지는 ISR이 만료될 때까지(최대 1시간) 옛 내용을 보여준다.
 - 시간이 지나 만료된 캐시는 DB 장애 중에도 이전 페이지를 계속 내보낸다. 반면 `revalidatePath` 직후의 첫 요청은 블로킹 재생성이라, 그때 DB가 죽어 있으면 500이 난다.
 

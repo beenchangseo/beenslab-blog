@@ -46,6 +46,16 @@ test('unknown post and page numbers are 404', async ({request}) => {
     expect((await request.get('/blog/page/999')).status()).toBe(404);
 });
 
+for (const path of ['/category/no-such-category', '/blog/page/999', '/no-such-route']) {
+    test(`${path} draws the 404 page inside one header and footer`, async ({page}) => {
+        await page.goto(path);
+        await expect(page.getByRole('heading', {name: '페이지를 찾을 수 없습니다'})).toHaveCount(1);
+        await expect(page.locator('header')).toHaveCount(1);
+        await expect(page.locator('footer')).toHaveCount(1);
+        await expect(page.locator('main')).toHaveCount(1);
+    });
+}
+
 test('legacy category links redirect to the category path', async ({request}) => {
     const response = await request.get('/category?filter=backend', {maxRedirects: 0});
     expect(response.status()).toBe(307);
@@ -68,4 +78,5 @@ test('the editor opens an existing post and rejects an unknown slug', async ({
 
     await page.goto('/admin/board/editor/no-such-post');
     await expect(page.getByText('페이지를 찾을 수 없습니다')).toBeVisible();
+    await expect(page.locator('header')).toHaveCount(1);
 });
