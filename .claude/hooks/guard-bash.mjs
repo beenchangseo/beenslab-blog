@@ -8,7 +8,7 @@ const command = input.tool_input?.command ?? '';
 // counts as a command start.
 const START = String.raw`(?:^|[;&|(\n]|\b(?:ba|z)?sh\s+-\w*c\s+["'])\s*`;
 const PREFIXES = String.raw`(?:(?:time|sudo|exec|command|nohup)\s+|timeout\s+\S+\s+)*(?:env\s+)?(?:\w+=\S*\s+)*`;
-const RUNNER = String.raw`(?:npx(?:\s+(?:-p|--package)\s+\S+|\s+-\S+)*\s+|npm\s+(?:exec|x)(?:\s+-\S+)*\s+(?:--\s+)?|pnpm\s+(?:exec\s+|dlx\s+)?|yarn\s+(?:dlx\s+)?|bunx\s+)?`;
+const RUNNER = String.raw`(?:npx(?:\s+(?:-p|--package)\s+[^-\s]\S*|\s+-\S+)*\s+|npm\s+(?:exec|x)(?:\s+-\S+)*\s+(?:--\s+)?|pnpm\s+(?:exec\s+|dlx\s+)?|yarn\s+(?:dlx\s+)?|bunx\s+)?`;
 const AT_COMMAND = START + PREFIXES + RUNNER + String.raw`(?:\S*/)?prisma(?:@\S+)?\s+`;
 
 const BLOCKED = [

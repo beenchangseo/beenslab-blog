@@ -45,9 +45,10 @@ const ALLOWED = [
     'gh pr comment 3 --body "guard now blocks prisma db push variants"',
 ];
 
-function exitCode(command) {
+function exitCode(command, timeout) {
     return spawnSync('node', [new URL('./guard-bash.mjs', import.meta.url).pathname], {
         input: JSON.stringify({tool_input: {command}}),
+        timeout,
     }).status;
 }
 
@@ -58,3 +59,7 @@ for (const command of BLOCKED) {
 for (const command of ALLOWED) {
     test(`allows ${JSON.stringify(command)}`, () => assert.equal(exitCode(command), 0));
 }
+
+test('answers a long npx -p chain within 2s', () => {
+    assert.equal(exitCode(`npx ${'-p '.repeat(40)}tsc`, 2000), 0);
+});
