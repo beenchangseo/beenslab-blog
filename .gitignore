@@ -53,3 +53,6 @@ scripts
 # playwright
 test-results
 playwright-report
+
+# claude code personal overrides
+.claude/settings.local.json
