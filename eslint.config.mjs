@@ -2,13 +2,59 @@ import {defineConfig} from 'eslint/config';
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 import nextTypescript from 'eslint-config-next/typescript';
 
-// Next 16에서 `next lint`가 사라져 ESLint CLI를 직접 쓴다(`npm run lint` = `eslint .`).
-// ESLint 10은 flat config만 지원하므로 .eslintrc.json은 제거했다.
+// Next 16 removed `next lint`, so `npm run lint` runs the ESLint CLI on this flat config.
+// ESLint stays on 9.x: the eslint-plugin-react bundled with eslint-config-next breaks on 10.
+
+const noParentImports = {
+    group: ['../*'],
+    message: "Import through the '@/' alias instead of a parent-relative path.",
+};
+
+const noPrisma = {
+    name: '@/lib/prisma',
+    message: 'Reads go through src/lib/posts.ts, writes through src/app/actions.',
+};
+
 export default defineConfig([
     {
-        ignores: ['.next/**', 'test-results/**', 'next-env.d.ts', '.gstack/**'],
+        ignores: [
+            '.next/**',
+            'test-results/**',
+            'playwright-report/**',
+            'next-env.d.ts',
+            '.gstack/**',
+        ],
     },
     {
         extends: [...nextCoreWebVitals, ...nextTypescript],
+    },
+    {
+        files: ['src/**/*.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': ['error', {patterns: [noParentImports]}],
+        },
+    },
+    {
+        files: ['src/app/**/*.{ts,tsx}'],
+        ignores: ['src/app/actions/**'],
+        rules: {
+            'no-restricted-imports': ['error', {paths: [noPrisma], patterns: [noParentImports]}],
+        },
+    },
+    {
+        files: ['src/components/**/*.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        noPrisma,
+                        {name: '@/lib/redis', message: 'Components do not talk to Redis.'},
+                        {name: '@prisma/client', message: 'Components use the DTOs in src/types.'},
+                    ],
+                    patterns: [noParentImports],
+                },
+            ],
+        },
     },
 ]);
