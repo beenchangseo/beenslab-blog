@@ -47,12 +47,17 @@ test('unknown post and page numbers are 404', async ({request}) => {
 });
 
 for (const path of ['/category/no-such-category', '/blog/page/999', '/no-such-route']) {
-    test(`${path} draws the 404 page inside one header and footer`, async ({page}) => {
+    test(`${path} draws the 404 page inside the site header and footer`, async ({page}) => {
+        const headerLinks = () => page.locator('header nav').first().getByRole('link');
+        await page.goto('/blog');
+        const blogHeaderLinks = await headerLinks().allTextContents();
+
         await page.goto(path);
         await expect(page.getByRole('heading', {name: '페이지를 찾을 수 없습니다'})).toHaveCount(1);
         await expect(page.locator('header')).toHaveCount(1);
         await expect(page.locator('footer')).toHaveCount(1);
         await expect(page.locator('main')).toHaveCount(1);
+        await expect(headerLinks()).toHaveText(blogHeaderLinks);
     });
 }
 
