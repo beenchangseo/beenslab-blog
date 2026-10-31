@@ -151,10 +151,6 @@ ESLint가 강제하는 것이 셋 있다. `src/components`는 `@/lib/prisma`, `@
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | 조회수 Redis. Vercel Marketplace 리소스가 주입하고 `Redis.fromEnv()`가 읽는다 |
 | `CRON_SECRET` | 조회수 동기화 크론 인증. 없으면 라우트가 503 |
 
-## 남은 것
-
-- `OauthClient` 모델(`oauth_client` 테이블)은 쓰지 않는 이전 OAuth 연동 잔재다. 지우려면 테이블을 DROP하는 마이그레이션이 필요하다.
-
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

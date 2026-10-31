@@ -24,15 +24,6 @@ model User {
   @@map("user")
 }
 
-model OauthClient {
-  id                   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  client_id            String @unique
-  client_secret        String
-  client_redirect_uris String
-
-  @@map("oauth_client")
-}
-
 model Category {
   id      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   keyword String           @unique
