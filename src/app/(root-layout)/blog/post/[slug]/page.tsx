@@ -1,4 +1,4 @@
-import {Mdx} from '../../../../../components/Mdx';
+import {Markdown} from '@/components/blog/Markdown';
 import {getAllPosts, getCategories, getPostBySlug, getSlugRedirect} from '@/lib/posts';
 import Container from '@/components/layout/Container';
 import TableOfContents from '@/components/blog/TableOfContents';
@@ -11,6 +11,7 @@ import Image from 'next/image';
 import {Metadata} from 'next';
 import Script from 'next/script';
 import {notFound, permanentRedirect} from 'next/navigation';
+import {categoryPath, postPath} from '@/lib/paths';
 
 export const revalidate = 3600;
 
@@ -30,7 +31,7 @@ async function resolvePost(slug: string) {
 
     const currentSlug = await getSlugRedirect(slug);
     if (currentSlug) {
-        permanentRedirect(`/blog/post/${currentSlug}`);
+        permanentRedirect(postPath(currentSlug));
     }
 
     notFound();
@@ -41,7 +42,7 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
     const params = await props.params;
     const post = await resolvePost(params.slug);
-    const url = absoluteUrl(`/blog/post/${params.slug}`);
+    const url = absoluteUrl(postPath(params.slug));
     return {
         title: post.title,
         description: post.description,
@@ -87,7 +88,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
     const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
 
     const headings = extractHeadings(post.contents);
-    const postUrl = absoluteUrl(`/blog/post/${params.slug}`);
+    const postUrl = absoluteUrl(postPath(params.slug));
 
     // 같은 카테고리의 다른 글. 한 편 읽고 그대로 떠나지 않게 이어 붙인다.
     const allPosts = await getAllPosts();
@@ -184,7 +185,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                                 return (
                                     <Link
                                         key={item}
-                                        href={`/category/${item}`}
+                                        href={categoryPath(item)}
                                         className="rounded-full bg-surface-subtle px-3 py-1 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                                     >
                                         {category ? category.title : item}
@@ -244,7 +245,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                     )}
 
                     <div className="prose dark:prose-invert max-w-none">
-                        <Mdx markdown={post.contents} />
+                        <Markdown markdown={post.contents} />
                     </div>
 
                     <div className="mt-12 border-t border-line pt-8">
@@ -261,7 +262,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                     >
                         {prev ? (
                             <Link
-                                href={`/blog/post/${prev.slug}`}
+                                href={postPath(prev.slug)}
                                 className="rounded-xl border border-line px-5 py-4 transition-colors hover:border-brand-500 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                             >
                                 <span className="text-xs text-ink-muted">← 이전 편</span>
@@ -272,7 +273,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                         )}
                         {next && (
                             <Link
-                                href={`/blog/post/${next.slug}`}
+                                href={postPath(next.slug)}
                                 className="rounded-xl border border-line px-5 py-4 text-right transition-colors hover:border-brand-500 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 sm:col-start-2"
                             >
                                 <span className="text-xs text-ink-muted">다음 편 →</span>

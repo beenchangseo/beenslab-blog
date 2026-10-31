@@ -1,5 +1,5 @@
 import type {Metadata} from 'next';
-import ThemeProvider from '../components/mode/ThemeProvider';
+import ThemeProvider from '@/components/theme/ThemeProvider';
 import {SITE_URL} from '@/lib/site';
 
 // Pretendard 동적 서브셋: unicode-range로 92개 청크가 쪼개져 있어

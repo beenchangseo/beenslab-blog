@@ -1,9 +1,9 @@
 import PostCard from './PostCard';
-import {GetAllBlogPostResponseDto, GetCategoryResponseDto} from '@/types/blog';
+import {PostSummary, Category} from '@/types/blog';
 
 type Props = {
-    posts: GetAllBlogPostResponseDto[];
-    categories: GetCategoryResponseDto[];
+    posts: PostSummary[];
+    categories: Category[];
     // 첫 줄에 오는 카드 수만큼 우선 로딩한다.
     priorityCount?: number;
 };

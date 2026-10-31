@@ -4,9 +4,10 @@ import Link from 'next/link';
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {softDeletePost} from '@/app/actions/posts';
-import {GetAllBlogPostResponseDto} from '@/types/blog';
+import {PostSummary} from '@/types/blog';
+import {categoryPath, postPath} from '@/lib/paths';
 
-export default function AdminPostItem({post}: {post: GetAllBlogPostResponseDto}) {
+export default function AdminPostItem({post}: {post: PostSummary}) {
     const router = useRouter();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -33,7 +34,7 @@ export default function AdminPostItem({post}: {post: GetAllBlogPostResponseDto})
     return (
         <>
             <div className="w-full my-7">
-                <Link href={`/blog/post/${post.slug}`} passHref>
+                <Link href={postPath(post.slug)} passHref>
                     <div className="flex items-center gap-2 font-medium text-xs transition text-gray-500 dark:text-gray-300">
                         <span>
                             {new Date(post.published_at ?? post.create_time).toLocaleDateString()}
@@ -58,7 +59,7 @@ export default function AdminPostItem({post}: {post: GetAllBlogPostResponseDto})
                     {post.categories.map((category) => (
                         <Link
                             key={category}
-                            href={`/category/${category}`}
+                            href={categoryPath(category)}
                             className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
                         >
                             {category}

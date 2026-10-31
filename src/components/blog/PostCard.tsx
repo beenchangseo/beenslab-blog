@@ -1,11 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import {getPostThumbnail} from '@/lib/postImage';
-import {GetAllBlogPostResponseDto, GetCategoryResponseDto} from '@/types/blog';
+import {PostSummary, Category} from '@/types/blog';
+import {categoryPath, postPath} from '@/lib/paths';
 
 type Props = {
-    post: GetAllBlogPostResponseDto;
-    categories: GetCategoryResponseDto[];
+    post: PostSummary;
+    categories: Category[];
     // 첫 화면에 보이는 카드만 우선 로딩한다. 나머지는 lazy.
     priority?: boolean;
 };
@@ -17,7 +18,7 @@ export default function PostCard({post, categories, priority = false}: Props) {
     return (
         <article className="group flex flex-col">
             <Link
-                href={`/blog/post/${post.slug}`}
+                href={postPath(post.slug)}
                 className="block overflow-hidden rounded-xl border border-line bg-surface-subtle focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
             >
                 <Image
@@ -34,7 +35,7 @@ export default function PostCard({post, categories, priority = false}: Props) {
             <div className="mt-4 flex flex-col gap-2">
                 {categoryTitle && categoryKeyword && (
                     <Link
-                        href={`/category/${categoryKeyword}`}
+                        href={categoryPath(categoryKeyword)}
                         className="w-fit text-xs font-semibold text-brand-600 hover:underline"
                     >
                         {categoryTitle}
@@ -43,7 +44,7 @@ export default function PostCard({post, categories, priority = false}: Props) {
 
                 <h3 className="text-lg font-bold leading-snug">
                     <Link
-                        href={`/blog/post/${post.slug}`}
+                        href={postPath(post.slug)}
                         className="line-clamp-2 hover:text-brand-600 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                     >
                         {post.title}

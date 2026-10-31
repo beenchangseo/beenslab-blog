@@ -1,4 +1,4 @@
-import {Mode} from '../../data/career';
+import {Mode} from '@/data/career';
 
 export default function ModeToggle({
     mode,

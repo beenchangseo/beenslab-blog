@@ -5,6 +5,7 @@ import {getAllPosts, getCategories} from '@/lib/posts';
 import Container from '@/components/layout/Container';
 import PostGrid from '@/components/blog/PostGrid';
 import {getPostThumbnail} from '@/lib/postImage';
+import {postPath} from '@/lib/paths';
 
 export const revalidate = 3600;
 
@@ -73,7 +74,7 @@ export default async function Home() {
                             {popular.map((post, index) => (
                                 <li key={post.id}>
                                     <Link
-                                        href={`/blog/post/${post.slug}`}
+                                        href={postPath(post.slug)}
                                         className="flex items-baseline gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                                     >
                                         <span className="text-xl font-bold tabular-nums text-brand-500">
@@ -109,7 +110,7 @@ export default async function Home() {
                                     {series.posts.map((post) => (
                                         <li key={post.id} className="flex gap-4">
                                             <Link
-                                                href={`/blog/post/${post.slug}`}
+                                                href={postPath(post.slug)}
                                                 className="shrink-0 overflow-hidden rounded-lg border border-line focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                                             >
                                                 <Image
@@ -126,7 +127,7 @@ export default async function Home() {
                                                     {post.series?.order}편
                                                 </p>
                                                 <Link
-                                                    href={`/blog/post/${post.slug}`}
+                                                    href={postPath(post.slug)}
                                                     className="mt-1 line-clamp-2 block font-semibold hover:text-brand-600"
                                                 >
                                                     {post.title}

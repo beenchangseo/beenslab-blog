@@ -6,7 +6,7 @@ import rehypeHighlight from 'rehype-highlight';
 import {getLocalImageSize} from '@/lib/imageSize';
 import {createHeadingIdFactory} from '@/lib/toc';
 
-type MarkdownRendererProps = {
+type MarkdownProps = {
     markdown: string;
 };
 
@@ -84,7 +84,8 @@ function buildComponents(): Components {
     };
 }
 
-export function Mdx({markdown}: MarkdownRendererProps) {
+// Not MDX: react-markdown with GFM and highlight.js. Raw HTML in a post renders as text.
+export function Markdown({markdown}: MarkdownProps) {
     return (
         <ReactMarkdown
             remarkPlugins={[remarkGfm]}

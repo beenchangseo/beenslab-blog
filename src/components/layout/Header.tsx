@@ -5,10 +5,10 @@ import Nav from './Nav';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {logout} from '@/app/actions/auth';
-import DarkModeButton from '../mode/DarkMode';
-import {GetCategoryResponseDto} from '@/types/blog';
+import ThemeToggle from '@/components/theme/ThemeToggle';
+import {Category} from '@/types/blog';
 
-export default function Header({categories = []}: {categories?: GetCategoryResponseDto[]}) {
+export default function Header({categories = []}: {categories?: Category[]}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,7 +72,7 @@ export default function Header({categories = []}: {categories?: GetCategoryRespo
                 </nav>
 
                 <div className="flex shrink-0 items-center gap-4">
-                    <DarkModeButton />
+                    <ThemeToggle />
                     {/* 로그인 버튼은 방문자에게 보일 이유가 없다. /admin으로 가면
                         proxy가 로그인 화면으로 보낸다. 로그아웃만 노출한다. */}
                     {isLoggedIn && (

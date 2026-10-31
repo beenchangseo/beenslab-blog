@@ -1,9 +1,5 @@
 import type {CreatePostInput} from '@/app/actions/posts';
-import type {
-    GetBlogPostResponseDto,
-    GetCategoryResponseDto,
-    GetSeriesResponseDto,
-} from '@/types/blog';
+import type {PostDetail, Category, Series} from '@/types/blog';
 
 // What the editor form holds while typing. Kept apart from PostEditor because that
 // file is a client module, and the server pages that build the initial draft cannot
@@ -32,9 +28,9 @@ export const EMPTY_DRAFT: PostDraft = {
 
 // Posts reference categories by keyword and series by slug, but the actions take ids.
 export function draftFromPost(
-    post: GetBlogPostResponseDto,
-    categories: GetCategoryResponseDto[],
-    seriesList: GetSeriesResponseDto[],
+    post: PostDetail,
+    categories: Category[],
+    seriesList: Series[],
 ): PostDraft {
     const categoryIdByKeyword = new Map(categories.map((c) => [c.keyword, c.id]));
 

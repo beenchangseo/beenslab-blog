@@ -2,9 +2,9 @@
 
 import {useState} from 'react';
 import AdminPostItem from '@/components/admin/AdminPostItem';
-import {GetAllBlogPostResponseDto} from '@/types/blog';
+import {PostSummary} from '@/types/blog';
 
-export default function AdminPostList({posts}: {posts: GetAllBlogPostResponseDto[]}) {
+export default function AdminPostList({posts}: {posts: PostSummary[]}) {
     const [search, setSearch] = useState('');
     const filteredPosts = posts.filter((post) => post.title.toLowerCase().includes(search));
 

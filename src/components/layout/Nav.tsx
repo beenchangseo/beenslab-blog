@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import {GetCategoryResponseDto} from '@/types/blog';
+import {Category} from '@/types/blog';
+import {categoryPath} from '@/lib/paths';
 
 interface NavProps {
     type: 'toggle' | 'normal';
-    categories: GetCategoryResponseDto[];
+    categories: Category[];
     onClick?: () => void;
 }
 
@@ -20,8 +21,8 @@ export default function Nav({type, categories, onClick}: NavProps) {
         {label: '전체', href: '/blog', active: pathname === '/blog'},
         ...categories.map((category) => ({
             label: category.title,
-            href: `/category/${category.keyword}`,
-            active: pathname === `/category/${category.keyword}`,
+            href: categoryPath(category.keyword),
+            active: pathname === categoryPath(category.keyword),
         })),
         {label: 'Career', href: '/career', active: pathname === '/career'},
     ];

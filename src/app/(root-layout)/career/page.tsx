@@ -1,8 +1,8 @@
 'use client';
 import {useState} from 'react';
-import Header from '../../../components/career/Header';
-import ResumeView from '../../../components/career/ResumeView';
-import PortfolioView from '../../../components/career/PortfolioView';
+import Header from '@/components/career/Header';
+import ResumeView from '@/components/career/ResumeView';
+import PortfolioView from '@/components/career/PortfolioView';
 
 function Divider() {
     return (

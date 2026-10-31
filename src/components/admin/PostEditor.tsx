@@ -5,15 +5,16 @@ import {ReactNode, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {createPost, updatePost} from '@/app/actions/posts';
 import {PostDraft, toPostInput, validateDraft} from '@/components/admin/postDraft';
-import {GetCategoryResponseDto, GetSeriesResponseDto, PostStatus} from '@/types/blog';
+import {Category, Series, PostStatus} from '@/types/blog';
+import {postPath} from '@/lib/paths';
 
 type Target = {mode: 'create'} | {mode: 'edit'; postId: string; status: PostStatus};
 
 type Props = {
     target: Target;
     initial: PostDraft;
-    categories: GetCategoryResponseDto[];
-    seriesList: GetSeriesResponseDto[];
+    categories: Category[];
+    seriesList: Series[];
 };
 
 const COPY = {
@@ -92,7 +93,7 @@ export default function PostEditor({target, initial, categories, seriesList}: Pr
 
             if (publish) {
                 alert(copy.published);
-                router.push(`/blog/post/${result.data.slug}`);
+                router.push(postPath(result.data.slug));
             } else {
                 // Drafts are not on the public pages, so go back to the admin list.
                 alert('초안으로 저장했습니다.');
