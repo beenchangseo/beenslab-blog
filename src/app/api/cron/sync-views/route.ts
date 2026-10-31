@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {revalidatePath} from 'next/cache';
-import {syncViewCounts} from '@/lib/viewSync';
+import {syncViewCounts} from '@/lib/views';
 
 export const dynamic = 'force-dynamic';
 // Prisma가 필요하므로 Node 런타임에서 돈다. vercel.json의 regions로 icn1에 묶여 있다.

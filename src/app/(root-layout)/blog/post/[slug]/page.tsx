@@ -5,6 +5,7 @@ import TableOfContents from '@/components/blog/TableOfContents';
 import ShareButtons from '@/components/blog/ShareButtons';
 import PostCard from '@/components/blog/PostCard';
 import {extractHeadings} from '@/lib/toc';
+import {AUTHOR_NAME, SITE_HOST, SITE_URL, absoluteUrl} from '@/lib/site';
 import Link from 'next/link';
 import Image from 'next/image';
 import {Metadata} from 'next';
@@ -40,11 +41,10 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
     const params = await props.params;
     const post = await resolvePost(params.slug);
-    const url = `https://blog.beenslab.com/blog/post/${params.slug}`;
+    const url = absoluteUrl(`/blog/post/${params.slug}`);
     return {
         title: post.title,
         description: post.description,
-        // keywords: post.tags,
         openGraph: {
             title: post.title,
             siteName: 'beenslab',
@@ -53,7 +53,7 @@ export async function generateMetadata(props: {
             type: 'article',
             publishedTime: post.published_at ?? post.create_time,
             modifiedTime: post.update_time,
-            authors: ['ChangBeen Seo'],
+            authors: [AUTHOR_NAME],
             tags: post.tags,
         },
         twitter: {
@@ -87,7 +87,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
     const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
 
     const headings = extractHeadings(post.contents);
-    const postUrl = `https://blog.beenslab.com/blog/post/${params.slug}`;
+    const postUrl = absoluteUrl(`/blog/post/${params.slug}`);
 
     // 같은 카테고리의 다른 글. 한 편 읽고 그대로 떠나지 않게 이어 붙인다.
     const allPosts = await getAllPosts();
@@ -107,19 +107,19 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                 '@type': 'ListItem',
                 position: 1,
                 name: 'Home',
-                item: 'https://blog.beenslab.com',
+                item: SITE_URL,
             },
             {
                 '@type': 'ListItem',
                 position: 2,
                 name: 'Blog',
-                item: 'https://blog.beenslab.com/blog',
+                item: absoluteUrl('/blog'),
             },
             {
                 '@type': 'ListItem',
                 position: 3,
                 name: post.title,
-                item: `https://blog.beenslab.com/blog/post/${params.slug}`,
+                item: postUrl,
             },
         ],
     };
@@ -129,7 +129,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
         '@type': 'TechArticle',
         mainEntityOfPage: {
             '@type': 'WebPage',
-            '@id': `https://blog.beenslab.com/blog/post/${params.slug}`,
+            '@id': postUrl,
         },
         headline: post.title,
         description: post.description,
@@ -137,21 +137,21 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
         keywords: post.tags.join(', '),
         author: {
             '@type': 'Person',
-            name: 'ChangBeen Seo',
-            url: 'https://blog.beenslab.com',
+            name: AUTHOR_NAME,
+            url: SITE_URL,
         },
         publisher: {
             '@type': 'Organization',
             name: 'beenslab',
-            url: 'https://blog.beenslab.com',
+            url: SITE_URL,
             logo: {
                 '@type': 'ImageObject',
-                url: 'https://blog.beenslab.com/apple-icon',
+                url: absoluteUrl('/apple-icon'),
             },
         },
         datePublished: publishedAt,
         dateModified: post.update_time,
-        image: 'https://blog.beenslab.com/opengraph-image',
+        image: absoluteUrl('/opengraph-image'),
         inLanguage: 'ko',
     };
 
@@ -203,13 +203,13 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                         </p>
 
                         <div className="mt-6 flex items-center gap-3 text-sm text-ink-muted">
-                            <span>ChangBeen Seo</span>
+                            <span>{AUTHOR_NAME}</span>
                             <span aria-hidden="true">·</span>
                             <time dateTime={publishedAt}>{formatDate(publishedAt)}</time>
                             <span className="ml-auto flex items-center">
                                 {/* 조회수 배지. 링크가 아니므로 a로 감싸지 않는다. */}
                                 <Image
-                                    src={`/api/blog/count?post_id=${params.slug}&domain=blog.beenslab.com`}
+                                    src={`/api/blog/count?post_id=${params.slug}&domain=${SITE_HOST}`}
                                     alt="조회수"
                                     width={200}
                                     height={20}

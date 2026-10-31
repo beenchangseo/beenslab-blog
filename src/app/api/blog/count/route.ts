@@ -1,10 +1,11 @@
 import {NextResponse} from 'next/server';
 import {redis} from '@/lib/redis';
+import {SITE_HOST} from '@/lib/site';
+import {dailyViewsKey, totalViewsKey} from '@/lib/views';
 
 // Runs on the Node.js runtime so it executes in the project's function region (icn1).
 export const dynamic = 'force-dynamic';
 
-const ALLOWED_DOMAIN = 'blog.beenslab.com';
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DAILY_KEY_TTL_SECONDS = 60 * 60 * 48;
 
@@ -39,12 +40,12 @@ export async function GET(request: Request) {
             return new NextResponse('Missing post_id or domain parameter', {status: 400});
         }
 
-        if (domain !== ALLOWED_DOMAIN || postId.length > 200 || !SLUG_PATTERN.test(postId)) {
+        if (domain !== SITE_HOST || postId.length > 200 || !SLUG_PATTERN.test(postId)) {
             return new NextResponse('Invalid post_id or domain parameter', {status: 400});
         }
 
-        const totalKey = `blog-hits:${domain}:${postId}:total`;
-        const dailyKey = `blog-hits:${domain}:${postId}:${getTodayDate()}`;
+        const totalKey = totalViewsKey(postId);
+        const dailyKey = dailyViewsKey(postId, getTodayDate());
 
         // INCR is atomic, so concurrent views are not lost.
         const [totalHits, todayHits] = await redis

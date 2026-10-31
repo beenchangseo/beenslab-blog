@@ -1,21 +1,21 @@
 import type {Metadata} from 'next';
 import ThemeProvider from '../components/mode/ThemeProvider';
-import {BASE_URL} from '../types/constants';
+import {SITE_URL} from '@/lib/site';
 
 // Pretendard 동적 서브셋: unicode-range로 92개 청크가 쪼개져 있어
 // 브라우저가 실제로 쓰인 글자 범위만 내려받는다. 라틴 글리프도 포함하므로
-// 별도의 영문 폰트는 쓰지 않는다. 폰트 스택은 tailwind.config.ts에 있다.
+// 별도의 영문 폰트는 쓰지 않는다. 폰트 스택은 globals.css의 @theme에 있다.
 const PRETENDARD_CSS =
     'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css';
 
 export const metadata: Metadata = {
-    metadataBase: new URL(BASE_URL),
+    metadataBase: new URL(SITE_URL),
     title: 'Beenchangseo Blog',
     description: 'Beenchangseo Blog',
     openGraph: {
         title: 'Beenchangseo Blog',
         description: 'Beenchangseo Blog',
-        url: new URL(BASE_URL),
+        url: new URL(SITE_URL),
         locale: 'ko_KR',
         siteName: 'Beenchangseo Blog',
     },

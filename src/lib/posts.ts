@@ -149,46 +149,12 @@ export type PostPage = {
     totalPages: number;
 };
 
-// 목록 한 페이지. 전체를 클라이언트로 내리던 걸 DB에서 잘라 온다.
-export const getPostPage = cache(async (page: number): Promise<PostPage> => {
+export function pageCount(total: number): number {
+    return Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
+}
+
+async function findPublicPage(where: Prisma.PostWhereInput, page: number): Promise<PostPage> {
     const current = Math.max(1, Math.floor(page) || 1);
-
-    const [posts, total] = await Promise.all([
-        prisma.post.findMany({
-            where: publicWhere,
-            orderBy: publicOrder,
-            include: includeRelations,
-            skip: (current - 1) * POSTS_PER_PAGE,
-            take: POSTS_PER_PAGE,
-        }),
-        prisma.post.count({where: publicWhere}),
-    ]);
-
-    return {
-        posts: posts.map(toListDto),
-        total,
-        totalPages: Math.max(1, Math.ceil(total / POSTS_PER_PAGE)),
-    };
-});
-
-// 제목·설명·본문을 함께 찾는다. 한글은 PostgreSQL 기본 전문검색 파서가
-// 제대로 못 자르므로 ILIKE로 부분 일치를 보고, pg_trgm GIN 인덱스가 그걸
-// 받쳐준다(20260920120553_add_trigram_search).
-export const searchPosts = cache(async (query: string, page = 1): Promise<PostPage> => {
-    const q = query.trim();
-    if (!q) {
-        return {posts: [], total: 0, totalPages: 1};
-    }
-
-    const current = Math.max(1, Math.floor(page) || 1);
-    const where = {
-        ...publicWhere,
-        OR: [
-            {title: {contains: q, mode: 'insensitive'}},
-            {description: {contains: q, mode: 'insensitive'}},
-            {contents: {contains: q, mode: 'insensitive'}},
-        ],
-    } satisfies Prisma.PostWhereInput;
 
     const [posts, total] = await Promise.all([
         prisma.post.findMany({
@@ -201,9 +167,31 @@ export const searchPosts = cache(async (query: string, page = 1): Promise<PostPa
         prisma.post.count({where}),
     ]);
 
-    return {
-        posts: posts.map(toListDto),
-        total,
-        totalPages: Math.max(1, Math.ceil(total / POSTS_PER_PAGE)),
-    };
+    return {posts: posts.map(toListDto), total, totalPages: pageCount(total)};
+}
+
+export const getPublishedPostCount = cache(() => prisma.post.count({where: publicWhere}));
+
+export const getPostPage = cache((page: number) => findPublicPage(publicWhere, page));
+
+// 제목·설명·본문을 함께 찾는다. 한글은 PostgreSQL 기본 전문검색 파서가
+// 제대로 못 자르므로 ILIKE로 부분 일치를 보고, pg_trgm GIN 인덱스가 그걸
+// 받쳐준다(20260920120553_add_trigram_search).
+export const searchPosts = cache(async (query: string, page = 1): Promise<PostPage> => {
+    const q = query.trim();
+    if (!q) {
+        return {posts: [], total: 0, totalPages: 1};
+    }
+
+    return findPublicPage(
+        {
+            ...publicWhere,
+            OR: [
+                {title: {contains: q, mode: 'insensitive'}},
+                {description: {contains: q, mode: 'insensitive'}},
+                {contents: {contains: q, mode: 'insensitive'}},
+            ],
+        },
+        page,
+    );
 });

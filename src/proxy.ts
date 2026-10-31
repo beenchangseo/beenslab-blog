@@ -1,18 +1,13 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {verifyToken} from '@/lib/auth';
+import {SESSION_COOKIE, verifyToken} from '@/lib/auth';
 
 export async function proxy(request: NextRequest) {
     if (request.nextUrl.pathname === '/admin/signin') {
         return NextResponse.next();
     }
 
-    const token = request.cookies.get('auth-token')?.value;
-
-    if (!token) {
-        return NextResponse.redirect(new URL('/admin/signin', request.url));
-    }
-
-    const session = await verifyToken(token);
+    const token = request.cookies.get(SESSION_COOKIE)?.value;
+    const session = token ? await verifyToken(token) : null;
 
     if (!session) {
         return NextResponse.redirect(new URL('/admin/signin', request.url));

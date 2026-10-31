@@ -1,4 +1,5 @@
 import {Metadata} from 'next';
+import {pageMetadata} from '@/lib/metadata';
 import {notFound} from 'next/navigation';
 import {getAllPosts, getCategories} from '@/lib/posts';
 import Container from '@/components/layout/Container';
@@ -25,31 +26,12 @@ export async function generateMetadata(props: {
         notFound();
     }
 
-    const url = `https://blog.beenslab.com/category/${keyword}`;
-    const title = `${category.title} - ChangBeen Seo`;
-    const description = `${category.title} 주제로 쓴 글 모음입니다.`;
-
-    return {
-        title,
-        description,
-        openGraph: {
-            title,
-            description,
-            url,
-            siteName: 'Beenchangseo Blog',
-            locale: 'ko_KR',
-            type: 'website',
-            images: [{url: '/opengraph-image', width: 1200, height: 630, alt: category.title}],
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title,
-            description,
-            creator: '@beenchangseo',
-            images: ['/twitter-image'],
-        },
-        alternates: {canonical: url},
-    };
+    return pageMetadata({
+        title: `${category.title} - ChangBeen Seo`,
+        description: `${category.title} 주제로 쓴 글 모음입니다.`,
+        path: `/category/${keyword}`,
+        imageAlt: category.title,
+    });
 }
 
 export default async function CategoryPage(props: {params: Promise<{keyword: string}>}) {
