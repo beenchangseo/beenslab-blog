@@ -1,19 +1,13 @@
 'use client';
-import {useState, ChangeEvent} from 'react';
-import PostList from './PostList';
-import {GetAllBlogPostResponseDto} from '../types/blog';
 
-export default function BlogSearch({
-    posts,
-    showAdminButtons = false,
-}: {
-    posts: GetAllBlogPostResponseDto[];
-    showAdminButtons?: boolean;
-}) {
+import {useState} from 'react';
+import AdminPostItem from '@/components/admin/AdminPostItem';
+import {GetAllBlogPostResponseDto} from '@/types/blog';
+
+export default function AdminPostList({posts}: {posts: GetAllBlogPostResponseDto[]}) {
     const [search, setSearch] = useState('');
-    const handleSearch = (e: ChangeEvent<HTMLInputElement>) =>
-        setSearch(e.target.value.toLowerCase());
     const filteredPosts = posts.filter((post) => post.title.toLowerCase().includes(search));
+
     return (
         <>
             <section className="mt-12 mb-8 flex flex-col gap-12">
@@ -37,13 +31,17 @@ export default function BlogSearch({
                     <input
                         type="search"
                         className="flex-1 outline-hidden bg-transparent appearance-none"
-                        onChange={handleSearch}
+                        onChange={(e) => setSearch(e.target.value.toLowerCase())}
                         placeholder="검색하기"
                         aria-label="게시글 제목 검색"
                     />
                 </div>
             </section>
-            <PostList posts={filteredPosts} showAdminButtons={showAdminButtons} />
+            <div className="flex flex-col">
+                {filteredPosts.map((post) => (
+                    <AdminPostItem key={post.id} post={post} />
+                ))}
+            </div>
         </>
     );
 }

@@ -1,6 +1,7 @@
 import {cache} from 'react';
 import {Prisma} from '@prisma/client';
 import {prisma} from '@/lib/prisma';
+import {requireSession} from '@/lib/auth';
 import {
     GetAllBlogPostResponseDto,
     GetBlogPostResponseDto,
@@ -87,7 +88,9 @@ export const getPostBySlug = cache(async (slug: string): Promise<GetBlogPostResp
 });
 
 // 관리자용. 초안까지 보여주고, 방금 손댄 글이 위로 오도록 수정 시각 순이다.
+// 초안이 새지 않도록 세션 확인을 호출하는 쪽에 맡기지 않고 여기서 한다.
 export const getAllPostsForAdmin = cache(async (): Promise<GetAllBlogPostResponseDto[]> => {
+    await requireSession();
     const posts = await prisma.post.findMany({
         where: {delete_time: null},
         orderBy: {update_time: 'desc'},
@@ -98,9 +101,9 @@ export const getAllPostsForAdmin = cache(async (): Promise<GetAllBlogPostRespons
 });
 
 // 에디터가 초안을 열 수 있어야 하므로 status로 거르지 않는다.
-// 이 함수를 쓰는 곳은 반드시 세션을 먼저 확인할 것.
 export const getPostBySlugForAdmin = cache(
     async (slug: string): Promise<GetBlogPostResponseDto | null> => {
+        await requireSession();
         const post = await prisma.post.findFirst({
             where: {slug, delete_time: null},
             include: includeRelations,
