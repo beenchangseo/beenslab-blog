@@ -10,6 +10,9 @@ const nextConfig = {
     },
     async redirects() {
         return [
+            // The admin home is the post list. A page-level redirect() would answer 200,
+            // because admin/loading.tsx wraps admin pages in a Suspense boundary.
+            {source: '/admin', destination: '/admin/blog', permanent: false},
             // Old category links used /category?filter=<keyword>. Handling this here
             // instead of reading searchParams keeps /category a static page.
             {

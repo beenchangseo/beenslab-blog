@@ -29,7 +29,7 @@ export async function login(formData: FormData) {
 
     await createSession(user.id, user.email, user.name);
 
-    redirect('/admin');
+    redirect('/admin/blog');
 }
 
 export async function logout() {
