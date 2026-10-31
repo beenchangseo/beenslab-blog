@@ -1,47 +1,19 @@
-import {Metadata} from 'next';
+import {pageMetadata} from '@/lib/metadata';
 import Link from 'next/link';
-import {redirect} from 'next/navigation';
 import {getAllPosts, getCategories} from '@/lib/posts';
 import Container from '@/components/layout/Container';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
     title: '카테고리 - ChangBeen Seo',
     description: 'Backend, Database, Infra 등 주제별로 분류된 블로그 포스트를 탐색하세요.',
-    openGraph: {
-        title: '카테고리 - ChangBeen Seo',
-        description: '주제별로 분류된 블로그 포스트',
-        url: 'https://blog.beenslab.com/category',
-        siteName: 'Beenchangseo Blog',
-        locale: 'ko_KR',
-        type: 'website',
-        images: [
-            {
-                url: '/opengraph-image',
-                width: 1200,
-                height: 630,
-                alt: 'Beenchangseo Blog Categories',
-            },
-        ],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: '카테고리 - ChangBeen Seo',
-        description: '주제별로 분류된 블로그 포스트',
-        creator: '@beenchangseo',
-        images: ['/twitter-image'],
-    },
-    alternates: {canonical: 'https://blog.beenslab.com/category'},
-};
+    shareDescription: '주제별로 분류된 블로그 포스트',
+    path: '/category',
+    imageAlt: 'Beenchangseo Blog Categories',
+});
 
-export default async function CategoryIndexPage(props: {searchParams: Promise<{filter?: string}>}) {
-    // 예전 링크(/category?filter=backend)를 새 경로로 넘긴다.
-    const {filter} = await props.searchParams;
-    if (filter) {
-        redirect(`/category/${filter}`);
-    }
-
+export default async function CategoryIndexPage() {
     const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
 
     return (

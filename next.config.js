@@ -8,6 +8,18 @@ const nextConfig = {
         // 게시글 이미지는 한 번 올리면 바뀌지 않으므로 변환 결과를 길게 캐시한다.
         minimumCacheTTL: 2678400, // 31일
     },
+    async redirects() {
+        return [
+            // Old category links used /category?filter=<keyword>. Handling this here
+            // instead of reading searchParams keeps /category a static page.
+            {
+                source: '/category',
+                has: [{type: 'query', key: 'filter', value: '(?<keyword>.+)'}],
+                destination: '/category/:keyword',
+                permanent: false,
+            },
+        ];
+    },
 };
 
 module.exports = nextConfig;
