@@ -24,6 +24,7 @@ npm run migrate:new -- <이름> / migrate:deploy / migrate:status
 ```
 
 - 최초 1회 `npx playwright install chromium`.
+- PR과 `main` push마다 GitHub Actions(`.github/workflows/check.yml`)가 `npm ci && npm run check`를 돌린다. DB나 비밀값 없이 돈다. 필수 검사로 걸지는 않았다. `main`이 아닌 브랜치는 Vercel이 빌드하지 않으므로, PR에서 보이는 검사는 이것 하나다. 빌드(prerender)는 `main` 배포에서야 처음 돈다.
 - `next dev`는 이 파일 끝에 `nextjs-agent-rules` 블록을 다시 써넣는다. 지워도 되살아나므로 그대로 커밋한다.
 - ESLint는 9.x에 묶여 있다. 10은 `eslint-config-next`가 번들한 `eslint-plugin-react`와 호환되지 않는다(`contextOrFilename.getFilename is not a function`).
 
