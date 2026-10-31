@@ -2,6 +2,7 @@ import {pageMetadata} from '@/lib/metadata';
 import Link from 'next/link';
 import {getAllPosts, getCategories} from '@/lib/posts';
 import Container from '@/components/layout/Container';
+import {categoryPath} from '@/lib/paths';
 
 export const revalidate = 3600;
 
@@ -29,7 +30,7 @@ export default async function CategoryIndexPage() {
                     return (
                         <li key={category.id}>
                             <Link
-                                href={`/category/${category.keyword}`}
+                                href={categoryPath(category.keyword)}
                                 className="flex items-baseline justify-between rounded-xl border border-line px-6 py-5 transition-colors hover:border-brand-500 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                             >
                                 <span className="text-lg font-semibold">{category.title}</span>

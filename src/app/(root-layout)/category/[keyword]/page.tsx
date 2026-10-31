@@ -4,6 +4,7 @@ import {notFound} from 'next/navigation';
 import {getAllPosts, getCategories} from '@/lib/posts';
 import Container from '@/components/layout/Container';
 import PostGrid from '@/components/blog/PostGrid';
+import {categoryPath} from '@/lib/paths';
 
 export const revalidate = 3600;
 
@@ -29,7 +30,7 @@ export async function generateMetadata(props: {
     return pageMetadata({
         title: `${category.title} - ChangBeen Seo`,
         description: `${category.title} 주제로 쓴 글 모음입니다.`,
-        path: `/category/${keyword}`,
+        path: categoryPath(keyword),
         imageAlt: category.title,
     });
 }

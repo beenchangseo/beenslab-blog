@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {getAllPosts} from '@/lib/posts';
-import {SITE_URL} from '@/lib/site';
+import {postPath} from '@/lib/paths';
+import {SITE_URL, absoluteUrl} from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -20,7 +21,7 @@ export async function GET() {
 
         const items = posts
             .map((post) => {
-                const url = `${SITE_URL}/blog/post/${post.slug}`;
+                const url = absoluteUrl(postPath(post.slug));
                 const published = new Date(post.published_at ?? post.create_time).toUTCString();
 
                 return `    <item>

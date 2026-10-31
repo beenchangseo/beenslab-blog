@@ -1,4 +1,4 @@
-import {EXPERIENCES, SKILLS, KEY_ACHIEVEMENTS, CERTS, EDUCATION} from '../../data/career';
+import {EXPERIENCES, SKILLS, KEY_ACHIEVEMENTS, CERTS, EDUCATION} from '@/data/career';
 import Chip from './Chip';
 import Section from './Section';
 

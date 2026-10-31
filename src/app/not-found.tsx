@@ -2,7 +2,7 @@
 // 이 파일이 직접 globals.css와 Header/Footer를 가져온다.
 import './globals.css';
 import Link from 'next/link';
-import Layout from '../components/layout/Layout';
+import Layout from '@/components/layout/Layout';
 
 export default function NotFound() {
     return (

@@ -1,4 +1,4 @@
-import {CERTS, POSTS, PROJECTS} from '../../data/career';
+import {CERTS, POSTS, PROJECTS} from '@/data/career';
 import Chip from './Chip';
 import Section from './Section';
 

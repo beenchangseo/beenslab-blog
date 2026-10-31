@@ -1,4 +1,4 @@
-import {Mode, SUMMARY} from '../../data/career';
+import {Mode, SUMMARY} from '@/data/career';
 import ModeToggle from './ModeToggle';
 
 export default function Header({

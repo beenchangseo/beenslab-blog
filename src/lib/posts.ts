@@ -2,13 +2,7 @@ import {cache} from 'react';
 import {Prisma} from '@prisma/client';
 import {prisma} from '@/lib/prisma';
 import {requireSession} from '@/lib/auth';
-import {
-    GetAllBlogPostResponseDto,
-    GetBlogPostResponseDto,
-    GetCategoryResponseDto,
-    GetSeriesResponseDto,
-    PostStatus,
-} from '@/types/blog';
+import {PostSummary, PostDetail, Category, Series, PostStatus} from '@/types/blog';
 
 const includeRelations = {
     PostOnCategory: {
@@ -40,7 +34,7 @@ function toSeriesDto(post: PostWithRelations) {
     return {slug: post.series.slug, title: post.series.title, order: post.series_order};
 }
 
-function toListDto(post: PostWithRelations): GetAllBlogPostResponseDto {
+function toListDto(post: PostWithRelations): PostSummary {
     return {
         id: post.id,
         slug: post.slug,
@@ -57,7 +51,7 @@ function toListDto(post: PostWithRelations): GetAllBlogPostResponseDto {
     };
 }
 
-function toDetailDto(post: PostWithRelations): GetBlogPostResponseDto {
+function toDetailDto(post: PostWithRelations): PostDetail {
     return {
         ...toListDto(post),
         user_id: post.user_id,
@@ -68,7 +62,7 @@ function toDetailDto(post: PostWithRelations): GetBlogPostResponseDto {
 
 // Shared by pages and API routes. Dates are serialized to ISO strings so the
 // results can be passed to client components and returned as JSON unchanged.
-export const getAllPosts = cache(async (): Promise<GetAllBlogPostResponseDto[]> => {
+export const getAllPosts = cache(async (): Promise<PostSummary[]> => {
     const posts = await prisma.post.findMany({
         where: publicWhere,
         orderBy: publicOrder,
@@ -78,7 +72,7 @@ export const getAllPosts = cache(async (): Promise<GetAllBlogPostResponseDto[]> 
     return posts.map(toListDto);
 });
 
-export const getPostBySlug = cache(async (slug: string): Promise<GetBlogPostResponseDto | null> => {
+export const getPostBySlug = cache(async (slug: string): Promise<PostDetail | null> => {
     const post = await prisma.post.findFirst({
         where: {...publicWhere, slug},
         include: includeRelations,
@@ -89,7 +83,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<GetBlogPostResp
 
 // 관리자용. 초안까지 보여주고, 방금 손댄 글이 위로 오도록 수정 시각 순이다.
 // 초안이 새지 않도록 세션 확인을 호출하는 쪽에 맡기지 않고 여기서 한다.
-export const getAllPostsForAdmin = cache(async (): Promise<GetAllBlogPostResponseDto[]> => {
+export const getAllPostsForAdmin = cache(async (): Promise<PostSummary[]> => {
     await requireSession();
     const posts = await prisma.post.findMany({
         where: {delete_time: null},
@@ -101,17 +95,15 @@ export const getAllPostsForAdmin = cache(async (): Promise<GetAllBlogPostRespons
 });
 
 // 에디터가 초안을 열 수 있어야 하므로 status로 거르지 않는다.
-export const getPostBySlugForAdmin = cache(
-    async (slug: string): Promise<GetBlogPostResponseDto | null> => {
-        await requireSession();
-        const post = await prisma.post.findFirst({
-            where: {slug, delete_time: null},
-            include: includeRelations,
-        });
+export const getPostBySlugForAdmin = cache(async (slug: string): Promise<PostDetail | null> => {
+    await requireSession();
+    const post = await prisma.post.findFirst({
+        where: {slug, delete_time: null},
+        include: includeRelations,
+    });
 
-        return post ? toDetailDto(post) : null;
-    },
-);
+    return post ? toDetailDto(post) : null;
+});
 
 // 제목이 바뀌면 slug가 새로 생성돼 옛 URL이 깨진다. 예전 slug로 들어온
 // 요청을 현재 slug로 넘겨주기 위한 조회.
@@ -129,7 +121,7 @@ export const getSlugRedirect = cache(async (oldSlug: string): Promise<string | n
 });
 
 export const getCategories = cache(
-    async (): Promise<GetCategoryResponseDto[]> =>
+    async (): Promise<Category[]> =>
         prisma.category.findMany({
             select: {id: true, title: true, keyword: true},
             orderBy: {title: 'asc'},
@@ -137,7 +129,7 @@ export const getCategories = cache(
 );
 
 export const getSeriesList = cache(
-    async (): Promise<GetSeriesResponseDto[]> =>
+    async (): Promise<Series[]> =>
         prisma.series.findMany({
             select: {id: true, slug: true, title: true, description: true},
             orderBy: {title: 'asc'},
@@ -147,7 +139,7 @@ export const getSeriesList = cache(
 export const POSTS_PER_PAGE = 12;
 
 export type PostPage = {
-    posts: GetAllBlogPostResponseDto[];
+    posts: PostSummary[];
     total: number;
     totalPages: number;
 };

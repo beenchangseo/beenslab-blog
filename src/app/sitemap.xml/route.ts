@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {getAllPosts, getCategories, pageCount} from '@/lib/posts';
-import {SITE_URL} from '@/lib/site';
+import {blogPagePath, categoryPath, postPath} from '@/lib/paths';
+import {SITE_URL, absoluteUrl} from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -18,7 +19,7 @@ export async function GET() {
         const pageUrls = Array.from({length: Math.max(0, totalPages - 1)}, (_, i) => i + 2)
             .map(
                 (n) => `  <url>
-    <loc>${SITE_URL}/blog/page/${n}</loc>
+    <loc>${absoluteUrl(blogPagePath(n))}</loc>
     <lastmod>${mostRecentPostUpdate.toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -29,7 +30,7 @@ export async function GET() {
         const categoryUrls = categories
             .map(
                 (c) => `  <url>
-    <loc>${SITE_URL}/category/${c.keyword}</loc>
+    <loc>${absoluteUrl(categoryPath(c.keyword))}</loc>
     <lastmod>${mostRecentPostUpdate.toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -40,7 +41,7 @@ export async function GET() {
         const postUrls = posts
             .map(
                 (p) => `  <url>
-    <loc>${SITE_URL}/blog/post/${p.slug}</loc>
+    <loc>${absoluteUrl(postPath(p.slug))}</loc>
     <lastmod>${p.update_time}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

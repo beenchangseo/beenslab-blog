@@ -6,7 +6,7 @@ import {FaMoon, FaSun} from 'react-icons/fa';
 
 const subscribe = () => () => {};
 
-export default function DarkModeButton() {
+export default function ThemeToggle() {
     // enableSystem을 쓰면 theme이 'system'일 수 있어 실제 적용값인 resolvedTheme을 본다.
     const {resolvedTheme, setTheme} = useTheme();
 

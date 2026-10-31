@@ -6,7 +6,7 @@ import Container from '@/components/layout/Container';
 import PostGrid from '@/components/blog/PostGrid';
 import SearchForm from '@/components/blog/SearchForm';
 import Pagination from '@/components/blog/Pagination';
-import {blogPageHref} from '../../pageHref';
+import {blogPagePath} from '@/lib/paths';
 
 export const revalidate = 3600;
 
@@ -51,7 +51,7 @@ export default async function BlogPaged(props: {params: Promise<{n: string}>}) {
                 <SearchForm />
             </header>
             <PostGrid posts={result.posts} categories={categories} />
-            <Pagination current={current} totalPages={result.totalPages} hrefFor={blogPageHref} />
+            <Pagination current={current} totalPages={result.totalPages} hrefFor={blogPagePath} />
         </Container>
     );
 }
