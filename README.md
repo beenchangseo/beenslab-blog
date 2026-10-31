@@ -56,4 +56,6 @@ tests/            Playwright e2e
 
 ## 배포
 
-`main`에 push하면 Vercel이 배포한다. 함수 리전은 `vercel.json`에서 `icn1`로 고정했다. 조회수 동기화 크론도 같은 파일에 있다.
+`main`에 push하면 Vercel이 배포한다. 다른 브랜치는 빌드하지 않는다. 함수 리전은 `vercel.json`에서 `icn1`로 고정했다. 조회수 동기화 크론도 같은 파일에 있다.
+
+PR과 `main` push마다 GitHub Actions가 `npm run check`를 돌린다(`.github/workflows/check.yml`).
