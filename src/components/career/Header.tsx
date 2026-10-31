@@ -1,5 +1,4 @@
 import {Mode, SUMMARY} from '../../data/career';
-import Chip from './Chip';
 import ModeToggle from './ModeToggle';
 
 export default function Header({

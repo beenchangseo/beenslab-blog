@@ -53,7 +53,7 @@ export async function getSession(): Promise<SessionPayload | null> {
             name: payload.name as string | null,
             expiresAt: new Date((payload.exp as number) * 1000),
         };
-    } catch (error) {
+    } catch {
         return null;
     }
 }
@@ -73,7 +73,7 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
             name: payload.name as string | null,
             expiresAt: new Date((payload.exp as number) * 1000),
         };
-    } catch (error) {
+    } catch {
         return null;
     }
 }
