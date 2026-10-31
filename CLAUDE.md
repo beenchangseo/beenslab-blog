@@ -14,7 +14,7 @@
 
 ```bash
 npm run dev            # 개발 서버, 포트 7777
-npm run check          # typecheck + lint + format:check. 커밋 전에 돌린다
+npm run check          # typecheck + lint + format:check + test:hooks. 커밋 전에 돌린다
 npm run build          # 프로덕션 빌드. 공개 페이지를 prerender하므로 DATABASE_URL이 필요하다
 npm run test:e2e       # Playwright. 개발 서버를 띄우거나 떠 있는 서버를 재사용한다
 npm run format         # ts, tsx, mjs에 prettier
