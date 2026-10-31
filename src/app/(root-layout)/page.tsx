@@ -1,4 +1,4 @@
-import {Metadata} from 'next';
+import {pageMetadata} from '@/lib/metadata';
 import Image from 'next/image';
 import Link from 'next/link';
 import {getAllPosts, getCategories} from '@/lib/posts';
@@ -8,31 +8,15 @@ import {getPostThumbnail} from '@/lib/postImage';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
     title: 'ChangBeen Seo - 백엔드 개발자',
     description:
         '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다. 기술과 경험을 나누는 개발자 서창빈의 블로그입니다.',
+    shareDescription: '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다.',
+    path: '/',
     keywords: ['백엔드 개발자', 'Node.js', 'TypeScript', 'AWS', 'DevOps', '서창빈', 'beenchangseo'],
-    openGraph: {
-        title: 'ChangBeen Seo - 백엔드 개발자',
-        description: '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다.',
-        url: 'https://blog.beenslab.com/',
-        siteName: 'Beenchangseo Blog',
-        locale: 'ko_KR',
-        type: 'website',
-        images: [{url: '/opengraph-image', width: 1200, height: 630, alt: 'ChangBeen Seo Blog'}],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'ChangBeen Seo - 백엔드 개발자',
-        description: '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다.',
-        creator: '@beenchangseo',
-        images: ['/twitter-image'],
-    },
-    alternates: {
-        canonical: 'https://blog.beenslab.com/',
-    },
-};
+    imageAlt: 'ChangBeen Seo Blog',
+});
 
 export default async function Home() {
     const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);

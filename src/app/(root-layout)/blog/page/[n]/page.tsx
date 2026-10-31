@@ -1,7 +1,7 @@
 import {Metadata} from 'next';
+import {pageMetadata} from '@/lib/metadata';
 import {notFound} from 'next/navigation';
-import {getCategories, getPostPage, POSTS_PER_PAGE} from '@/lib/posts';
-import {prisma} from '@/lib/prisma';
+import {getCategories, getPostPage, getPublishedPostCount, pageCount} from '@/lib/posts';
 import Container from '@/components/layout/Container';
 import PostGrid from '@/components/blog/PostGrid';
 import SearchForm from '@/components/blog/SearchForm';
@@ -12,37 +12,18 @@ export const revalidate = 3600;
 
 // 2페이지부터만 여기서 만든다. 1페이지는 /blog가 맡는다.
 export async function generateStaticParams() {
-    const total = await prisma.post.count({where: {delete_time: null, status: 'PUBLISHED'}});
-    const totalPages = Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
+    const totalPages = pageCount(await getPublishedPostCount());
 
     return Array.from({length: Math.max(0, totalPages - 1)}, (_, i) => ({n: String(i + 2)}));
 }
 
 export async function generateMetadata(props: {params: Promise<{n: string}>}): Promise<Metadata> {
     const {n} = await props.params;
-    const url = `https://blog.beenslab.com/blog/page/${n}`;
-
-    return {
+    return pageMetadata({
         title: `블로그 ${n}페이지 - ChangBeen Seo`,
         description: '백엔드, 데이터베이스, 인프라에서 겪은 것들을 기록합니다.',
-        alternates: {canonical: url},
-        openGraph: {
-            title: `블로그 ${n}페이지 - ChangBeen Seo`,
-            description: '백엔드, 데이터베이스, 인프라에서 겪은 것들을 기록합니다.',
-            url,
-            siteName: 'Beenchangseo Blog',
-            locale: 'ko_KR',
-            type: 'website',
-            images: [{url: '/opengraph-image', width: 1200, height: 630, alt: 'Beenchangseo Blog'}],
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: `블로그 ${n}페이지 - ChangBeen Seo`,
-            description: '백엔드, 데이터베이스, 인프라에서 겪은 것들을 기록합니다.',
-            creator: '@beenchangseo',
-            images: ['/twitter-image'],
-        },
-    };
+        path: `/blog/page/${n}`,
+    });
 }
 
 export default async function BlogPaged(props: {params: Promise<{n: string}>}) {

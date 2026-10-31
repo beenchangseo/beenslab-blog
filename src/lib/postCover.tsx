@@ -1,5 +1,6 @@
 import {ImageResponse} from 'next/og';
 import {getCategories, getPostBySlug} from '@/lib/posts';
+import {AUTHOR_NAME, SITE_HOST} from '@/lib/site';
 
 export const COVER_SIZE = {width: 1200, height: 630};
 
@@ -72,8 +73,8 @@ export async function renderPostCover(slug: string) {
                         color: 'rgba(255,255,255,0.75)',
                     }}
                 >
-                    <div style={{display: 'flex'}}>blog.beenslab.com</div>
-                    <div style={{display: 'flex'}}>ChangBeen Seo</div>
+                    <div style={{display: 'flex'}}>{SITE_HOST}</div>
+                    <div style={{display: 'flex'}}>{AUTHOR_NAME}</div>
                 </div>
             </div>
         ),

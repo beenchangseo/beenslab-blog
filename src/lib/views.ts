@@ -1,15 +1,23 @@
 import {prisma} from '@/lib/prisma';
 import {redis} from '@/lib/redis';
+import {SITE_HOST} from '@/lib/site';
 
-const DOMAIN = 'blog.beenslab.com';
+// Redis is the source of truth for view counts. post.view_count is a copy that
+// lets the home page sort by popularity; syncViewCounts refreshes it.
+export function totalViewsKey(slug: string): string {
+    return `blog-hits:${SITE_HOST}:${slug}:total`;
+}
+
+export function dailyViewsKey(slug: string, date: string): string {
+    return `blog-hits:${SITE_HOST}:${slug}:${date}`;
+}
 
 export type ViewSyncResult = {
     checked: number;
     updated: number;
 };
 
-// 실시간 카운팅은 /api/blog/count가 Redis에 하고, 목록에서 인기 글을 정렬하려면
-// 그 값이 DB에도 있어야 한다. Redis가 원본이라 여러 번 돌려도 결과가 같다.
+// Copies Redis totals into post.view_count. Running it twice gives the same result.
 export async function syncViewCounts(): Promise<ViewSyncResult> {
     const posts = await prisma.post.findMany({
         where: {delete_time: null},
@@ -19,7 +27,7 @@ export async function syncViewCounts(): Promise<ViewSyncResult> {
     let updated = 0;
 
     for (const post of posts) {
-        const total = await redis.get(`blog-hits:${DOMAIN}:${post.slug}:total`);
+        const total = await redis.get(totalViewsKey(post.slug));
         const count = Number(total ?? 0);
 
         if (!Number.isFinite(count) || count === post.view_count) {

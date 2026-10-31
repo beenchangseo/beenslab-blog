@@ -1,18 +1,9 @@
 import {SignJWT, jwtVerify} from 'jose';
 import {cookies} from 'next/headers';
+import {redirect} from 'next/navigation';
 
-const SECRET_KEY = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'your-secret-key-change-this-in-production',
-);
-
-const COOKIE_NAME = 'auth-token';
-const COOKIE_OPTIONS = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/',
-};
+export const SESSION_COOKIE = 'auth-token';
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export interface SessionPayload {
     userId: string;
@@ -21,31 +12,41 @@ export interface SessionPayload {
     expiresAt: Date;
 }
 
+// Read on every call instead of at import so `next build` does not need the secret.
+// There is no fallback key: a missing secret must fail rather than sign tokens
+// with a value anyone can read in this repository.
+function secretKey(): Uint8Array {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not set');
+    }
+    return new TextEncoder().encode(secret);
+}
+
 export async function createSession(userId: string, email: string, name: string | null) {
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
 
     const token = await new SignJWT({userId, email, name})
         .setProtectedHeader({alg: 'HS256'})
         .setIssuedAt()
         .setExpirationTime(expiresAt)
-        .sign(SECRET_KEY);
+        .sign(secretKey());
 
     const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, token, COOKIE_OPTIONS);
+    cookieStore.set(SESSION_COOKIE, token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: SESSION_TTL_SECONDS,
+        path: '/',
+    });
 
     return {userId, email, name, expiresAt};
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
-
-    if (!token) {
-        return null;
-    }
-
+export async function verifyToken(token: string): Promise<SessionPayload | null> {
     try {
-        const {payload} = await jwtVerify(token, SECRET_KEY);
+        const {payload} = await jwtVerify(token, secretKey());
 
         return {
             userId: payload.userId as string,
@@ -56,24 +57,24 @@ export async function getSession(): Promise<SessionPayload | null> {
     } catch {
         return null;
     }
+}
+
+export async function getSession(): Promise<SessionPayload | null> {
+    const token = (await cookies()).get(SESSION_COOKIE)?.value;
+    return token ? verifyToken(token) : null;
+}
+
+// For admin pages and admin-only reads. proxy.ts already guards /admin, so this is
+// the second check for code that would leak drafts if it ran without a session.
+export async function requireSession(): Promise<SessionPayload> {
+    const session = await getSession();
+    if (!session) {
+        redirect('/admin/signin');
+    }
+    return session;
 }
 
 export async function deleteSession() {
     const cookieStore = await cookies();
-    cookieStore.delete(COOKIE_NAME);
-}
-
-export async function verifyToken(token: string): Promise<SessionPayload | null> {
-    try {
-        const {payload} = await jwtVerify(token, SECRET_KEY);
-
-        return {
-            userId: payload.userId as string,
-            email: payload.email as string,
-            name: payload.name as string | null,
-            expiresAt: new Date((payload.exp as number) * 1000),
-        };
-    } catch {
-        return null;
-    }
+    cookieStore.delete(SESSION_COOKIE);
 }
