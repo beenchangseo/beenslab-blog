@@ -21,6 +21,14 @@ const BLOCKED = [
     'time npx prisma migrate reset',
     'sudo prisma db push',
     'pnpm dlx prisma migrate dev',
+    'yarn dlx prisma db push',
+    'nohup npx prisma migrate dev',
+    'command prisma db push',
+    'zsh -c "prisma migrate reset"',
+    'timeout 120 npx prisma migrate dev',
+    'npx -p prisma@6 prisma db push',
+    'npx --package prisma prisma migrate reset',
+    'npm x prisma db push',
 ];
 
 const ALLOWED = [
@@ -32,6 +40,8 @@ const ALLOWED = [
     'npx prisma generate',
     'npx --yes prisma generate',
     'npm exec prisma migrate deploy',
+    'npx -p prisma@6 prisma generate',
+    'timeout 60 npx prisma migrate status',
     'gh pr comment 3 --body "guard now blocks prisma db push variants"',
 ];
 

@@ -20,6 +20,7 @@ export default defineConfig([
             'playwright-report/**',
             'next-env.d.ts',
             '.gstack/**',
+            '.claude/worktrees/**',
         ],
     },
     {

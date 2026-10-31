@@ -30,7 +30,7 @@
 | --- | --- |
 | `npm run dev` | 개발 서버 (포트 7777) |
 | `npm run build` | 프로덕션 빌드. `DATABASE_URL`이 필요하다 |
-| `npm run check` | 타입 검사, lint, 포맷 검사 |
+| `npm run check` | 타입 검사, lint, 포맷 검사, guard hook 테스트 |
 | `npm run format` | prettier로 ts, tsx, mjs 포맷 |
 | `npm run test:e2e` | Playwright e2e. 처음 한 번 `npx playwright install chromium` |
 | `npm run snapshot -- <url> <dir>` | 실행 중인 빌드의 응답을 기록한다. 리팩터링 전후 비교용 |
