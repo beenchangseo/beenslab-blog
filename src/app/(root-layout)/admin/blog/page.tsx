@@ -1,6 +1,6 @@
-import {getAllPostsForAdmin} from '@/lib/posts';
-import BlogSearch from '../../../../components/BlogSearch';
 import Link from 'next/link';
+import {getAllPostsForAdmin} from '@/lib/posts';
+import AdminPostList from '@/components/admin/AdminPostList';
 import Container from '@/components/layout/Container';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export default async function AdminBlogPage() {
                     새 글 작성
                 </Link>
             </div>
-            <BlogSearch posts={posts} showAdminButtons={true} />
+            <AdminPostList posts={posts} />
         </Container>
     );
 }
