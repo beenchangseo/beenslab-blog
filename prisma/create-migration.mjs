@@ -41,10 +41,7 @@ if (sql.trim() === EMPTY_MARKER || sql.trim() === '') {
     process.exit(0);
 }
 
-const stamp = new Date()
-    .toISOString()
-    .replace(/[-:T]/g, '')
-    .slice(0, 14); // YYYYMMDDHHMMSS
+const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14); // YYYYMMDDHHMMSS
 const dir = path.join('prisma', 'migrations', `${stamp}_${name}`);
 
 if (existsSync(dir)) {
