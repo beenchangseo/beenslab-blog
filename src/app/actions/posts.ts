@@ -24,10 +24,8 @@ export interface UpdatePostInput extends CreatePostInput {
 
 type ActionResult<T> = {success: true; data: T} | {success: false; error: string};
 
-// A Server Action can be called by anyone who can POST to a route that imports it,
-// and proxy.ts only covers /admin/*. Every mutation goes through this wrapper so the
-// session check, the error shape, and cache invalidation are never left out.
-// Blog pages are statically cached, so every change revalidates all of them.
+// Every mutation goes through here so none can skip the session check. proxy.ts only
+// guards /admin/*, and an action imported outside /admin would be callable without it.
 async function adminAction<T>(
     label: string,
     run: (session: SessionPayload) => Promise<T>,
@@ -69,6 +67,16 @@ function editableFields(input: CreatePostInput) {
     };
 }
 
+// Stamped only on the first draft-to-published save, so editing an old post does not
+// move it to the top of the list.
+function publishedAtAfterSave(
+    previous: {status: string; published_at: Date | null},
+    publish: boolean,
+): Date | null {
+    if (!publish) return null;
+    return previous.status === 'PUBLISHED' ? previous.published_at : new Date();
+}
+
 async function ensureUniqueSlug(baseSlug: string, excludePostId?: string): Promise<string> {
     let slug = baseSlug;
     let counter = 1;
@@ -81,8 +89,6 @@ async function ensureUniqueSlug(baseSlug: string, excludePostId?: string): Promi
             },
         });
 
-        // Old slugs are taken too. Otherwise a new post would claim another post's
-        // redirect address and old links would land on the wrong post.
         const reserved = existing
             ? null
             : await prisma.postSlugHistory.findFirst({
@@ -120,7 +126,6 @@ export async function createPost(input: CreatePostInput) {
                 data: {
                     ...fields,
                     slug,
-                    // New posts are drafts unless the editor's publish button was used.
                     status: publish ? 'PUBLISHED' : 'DRAFT',
                     published_at: publish ? new Date() : null,
                     user_id: session.userId,
@@ -150,17 +155,11 @@ export async function updatePost(input: UpdatePostInput) {
                 ? previousSlug
                 : await ensureUniqueSlug(generateSlugFromTitle(fields.title), postId);
 
-        // published_at is stamped only on the first draft-to-published transition, so
-        // editing an old post does not move it to the top of the list.
-        const wasPublished = existing.status === 'PUBLISHED';
-        const published_at =
-            publish && !wasPublished ? new Date() : publish ? existing.published_at : null;
+        const published_at = publishedAtAfterSave(existing, publish);
 
         return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             if (slug !== previousSlug) {
-                // A history row for the new slug pointed somewhere else and is now void.
                 await tx.postSlugHistory.deleteMany({where: {old_slug: slug}});
-                // Keep the old address so the post page can redirect it.
                 await tx.postSlugHistory.upsert({
                     where: {old_slug: previousSlug},
                     create: {old_slug: previousSlug, post_id: postId},

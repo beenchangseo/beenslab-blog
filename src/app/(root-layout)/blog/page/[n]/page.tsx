@@ -10,7 +10,6 @@ import {blogPagePath} from '@/lib/paths';
 
 export const revalidate = 3600;
 
-// 2페이지부터만 여기서 만든다. 1페이지는 /blog가 맡는다.
 export async function generateStaticParams() {
     const totalPages = pageCount(await getPublishedPostCount());
 
@@ -30,7 +29,6 @@ export default async function BlogPaged(props: {params: Promise<{n: string}>}) {
     const {n} = await props.params;
     const current = Number(n);
 
-    // 1페이지는 /blog가 정본이다. 중복 주소를 만들지 않는다.
     if (!Number.isInteger(current) || current < 2) {
         notFound();
     }

@@ -3,8 +3,6 @@
 import {useRouter} from 'next/navigation';
 import {FormEvent, useState} from 'react';
 
-// 검색이 서버로 넘어가면서 타이핑마다 거르던 방식을 버렸다. 엔터를 눌러야
-// /search?q= 로 이동한다. 대신 제목·설명뿐 아니라 본문까지 찾는다.
 export default function SearchForm({initialQuery = ''}: {initialQuery?: string}) {
     const router = useRouter();
     const [query, setQuery] = useState(initialQuery);

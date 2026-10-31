@@ -1,7 +1,6 @@
 import {existsSync} from 'node:fs';
 import {defineConfig, devices} from '@playwright/test';
 
-// tests/support/session.ts signs admin cookies with JWT_SECRET from .env.
 if (existsSync('.env')) {
     process.loadEnvFile('.env');
 }

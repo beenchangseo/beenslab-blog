@@ -7,7 +7,6 @@ import {categoryPath, postPath} from '@/lib/paths';
 type Props = {
     post: PostSummary;
     categories: Category[];
-    // 첫 화면에 보이는 카드만 우선 로딩한다. 나머지는 lazy.
     priority?: boolean;
 };
 

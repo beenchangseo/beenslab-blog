@@ -1,5 +1,3 @@
-// PostToolUse(Edit|Write|MultiEdit): formats the edited file with Prettier, then lints
-// it. Lint errors and warnings go back to Claude so they get fixed in the same turn.
 import {spawnSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';

@@ -11,9 +11,6 @@ interface NavProps {
     onClick?: () => void;
 }
 
-// 카테고리가 4개로 줄어서 상단 네비에 그대로 올릴 수 있게 됐다.
-// 카테고리는 쿼리(?filter=)가 아니라 실제 경로다. useSearchParams를 쓰면
-// 헤더가 들어간 모든 페이지가 정적 렌더링에서 빠진다.
 export default function Nav({type, categories, onClick}: NavProps) {
     const pathname = usePathname();
 

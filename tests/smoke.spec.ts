@@ -1,8 +1,8 @@
 import {expect, test} from '@playwright/test';
 import {adminSessionCookie} from './support/session';
 
-// Public pages are fetched with the request fixture, not a browser. A browser would
-// load the post view-counter image and add views to the production Redis counts.
+// Fetched without a browser: a browser on a post page loads the view-counter image,
+// which adds a view to the production Redis count.
 const PUBLIC_PAGES = [
     {path: '/', contains: '최신 글'},
     {path: '/blog', contains: '<h1'},

@@ -1,13 +1,7 @@
-/* @import는 @charset/@layer 외 모든 규칙보다 앞에 와야 한다.
-   Next 16의 Turbopack CSS 파서는 이 순서를 어기면 빌드를 실패시킨다.
-   코드 하이라이트 테마(rehype-highlight가 붙이는 .hljs-* 클래스용). */
 @import 'highlight.js/styles/atom-one-dark.css' layer(base);
 
 @import 'tailwindcss';
 
-/* v4는 JS 설정 파일 대신 @plugin으로 플러그인을 불러온다.
-   업그레이드 도구가 tailwind.config.ts를 지우면서 이 줄을 빠뜨려
-   본문의 prose 스타일이 전부 사라졌었다. */
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -27,20 +21,15 @@
     var(--tw-gradient-stops)
   );
 
-  /* 컨테이너 폭. Layout은 더 이상 폭을 정하지 않고 페이지가 고른다.
-     max-w-reading / max-w-page 로 쓴다. */
-  --container-reading: 46rem; /* 본문: 한 줄 40~50자 */
-  --container-page: 72rem; /* 목록/카드 그리드 */
+  --container-reading: 46rem;
+  --container-page: 72rem;
 
-  /* 강조색. 링크와 버튼, 카테고리 활성 상태에 쓴다. */
   --color-brand-50: oklch(0.97 0.017 254);
   --color-brand-100: oklch(0.93 0.04 254);
   --color-brand-500: oklch(0.62 0.18 254);
   --color-brand-600: oklch(0.55 0.19 254);
   --color-brand-700: oklch(0.48 0.17 254);
 
-  /* 의미 기반 색. 아래 @layer base에서 다크 모드 값으로 갈아끼우므로
-     컴포넌트에서 dark: 변형을 따로 쓸 필요가 없다. */
   --color-surface: oklch(1 0 0);
   --color-surface-subtle: oklch(0.975 0.002 254);
   --color-ink: oklch(0.21 0.01 254);
@@ -49,11 +38,8 @@
 }
 
 @layer base {
-  /*
-    Tailwind v4에서 기본 border 색이 currentcolor로 바뀌어서, 색을 지정하지
-    않은 border가 글자색을 따라간다. v3 때처럼 보이도록 되돌린다.
-    (주로 src/components/career/* 가 여기에 기댄다)
-  */
+  /* Tailwind v4 defaults border-color to currentcolor. Restore the v3 default for
+     borders that set no color. */
   *,
   ::after,
   ::before,
@@ -69,15 +55,6 @@
   }
 }
 
-/*
-  다크 모드 토큰. 일부러 @layer 밖에 둔다.
-
-  Tailwind의 @theme은 `:root,:host`로 값을 내보내고 그게 theme 레이어에
-  들어간다. 그런데 이 파일의 @layer base 블록이 결과 CSS에서 theme보다
-  먼저 나타나는 바람에 base가 더 낮은 우선순위를 갖게 됐고, 그 안에 두면
-  특정도를 올려도(:root.dark) theme의 흰색에 계속 밀렸다.
-  레이어에 속하지 않은 규칙은 모든 레이어를 이기므로 여기서 끝낸다.
-*/
 :root.dark {
   --color-surface: oklch(0.17 0.006 254);
   --color-surface-subtle: oklch(0.22 0.008 254);

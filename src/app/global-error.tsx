@@ -1,7 +1,5 @@
 'use client';
 
-// 루트 layout 자체가 실패했을 때의 마지막 방어선이라 html/body를 직접 렌더한다.
-// 이 시점에는 스타일시트도 못 불러왔을 수 있어 인라인 스타일만 쓴다.
 export default function GlobalError({
     error,
     reset,

@@ -2,8 +2,6 @@ import {prisma} from '@/lib/prisma';
 import {redis} from '@/lib/redis';
 import {SITE_HOST} from '@/lib/site';
 
-// Redis is the source of truth for view counts. post.view_count is a copy that
-// lets the home page sort by popularity; syncViewCounts refreshes it.
 export function totalViewsKey(slug: string): string {
     return `blog-hits:${SITE_HOST}:${slug}:total`;
 }
@@ -17,7 +15,6 @@ export type ViewSyncResult = {
     updated: number;
 };
 
-// Copies Redis totals into post.view_count. Running it twice gives the same result.
 export async function syncViewCounts(): Promise<ViewSyncResult> {
     const posts = await prisma.post.findMany({
         where: {delete_time: null},

@@ -20,9 +20,6 @@ export async function generateStaticParams() {
     return posts.filter((post) => post.slug).map((post) => ({slug: post.slug}));
 }
 
-// generateMetadata와 페이지 본문이 둘 다 글을 찾으므로 한 곳에 모은다.
-// 제목을 바꾸면 slug가 새로 생성돼 옛 주소가 깨지는데, 그때는 404 대신
-// 현재 주소로 308을 내보낸다.
 async function resolvePost(slug: string) {
     const post = await getPostBySlug(slug);
     if (post) {
@@ -74,10 +71,8 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
     const params = await props.params;
     const post = await resolvePost(params.slug);
     const categories = await getCategories();
-    // 공개 시각이 곧 독자에게 보여줄 날짜다. 없으면 작성 시각으로 떨어진다.
     const publishedAt = post.published_at ?? post.create_time;
 
-    // 같은 시리즈의 앞뒤 편. getAllPosts는 React.cache라 추가 쿼리가 아니다.
     const siblings = post.series
         ? (await getAllPosts())
               .filter((p) => p.series?.slug === post.series?.slug)
@@ -90,7 +85,6 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
     const headings = extractHeadings(post.contents);
     const postUrl = absoluteUrl(postPath(params.slug));
 
-    // 같은 카테고리의 다른 글. 한 편 읽고 그대로 떠나지 않게 이어 붙인다.
     const allPosts = await getAllPosts();
     const related = allPosts
         .filter(
@@ -194,8 +188,6 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                             })}
                         </div>
 
-                        {/* 제목은 대부분 한글이다. font-mono를 두면 공백/문장부호만 등폭으로
-                            잡혀 글자 사이가 들쭉날쭉해지므로 본문과 같은 폰트를 쓴다. */}
                         <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
                             {post.title}
                         </h1>
@@ -208,7 +200,6 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                             <span aria-hidden="true">·</span>
                             <time dateTime={publishedAt}>{formatDate(publishedAt)}</time>
                             <span className="ml-auto flex items-center">
-                                {/* 조회수 배지. 링크가 아니므로 a로 감싸지 않는다. */}
                                 <Image
                                     src={`/api/blog/count?post_id=${params.slug}&domain=${SITE_HOST}`}
                                     alt="조회수"
@@ -230,8 +221,7 @@ export default async function PostPage(props: {params: Promise<{slug: string}>})
                         )}
                     </header>
 
-                    {/* 자동 생성 커버는 제목을 그대로 그린 그림이라, 바로 위
-                        h1과 겹쳐 보인다. 직접 지정한 커버가 있을 때만 띄운다. */}
+                    {/* The generated cover is the title drawn as an image and would repeat the h1. */}
                     {post.cover_image && (
                         <Image
                             src={post.cover_image}
