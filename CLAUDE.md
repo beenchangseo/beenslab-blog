@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-개인 기술 블로그와 이력서 사이트(https://blog.beenslab.com)다. Next.js 16.3 App Router(React 19, Turbopack), Prisma 6(PostgreSQL 16), Tailwind CSS 4로 만들었고 Vercel에 배포한다. 글과 카테고리는 DB에 있고 `/admin`의 마크다운 에디터로 쓴다.
+개인 기술 블로그와 이력서 사이트(https://blog.beenslab.com)다. Next.js 16.4 App Router(React 19, Turbopack), Prisma 6(PostgreSQL 16), Tailwind CSS 4로 만들었고 Vercel에 배포한다. 글과 카테고리는 DB에 있고 `/admin`의 마크다운 에디터로 쓴다.
 
 이 파일에는 코드만 봐서는 알 수 없는 사실과 깨면 안 되는 규칙을 적는다. 순서가 있는 작업은 프로젝트 스킬에 있다.
 
