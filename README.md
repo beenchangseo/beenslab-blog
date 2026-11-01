@@ -12,12 +12,17 @@
 
 ## 로컬에서 실행하기
 
-1. 의존성을 설치한다. `postinstall`이 Prisma 클라이언트를 만든다.
+1. Node 버전을 맞춘다. 버전은 `.nvmrc`에 있고, CI도 같은 파일을 읽는다.
+   ```bash
+   nvm install   # 처음 한 번
+   nvm use
+   ```
+2. 의존성을 설치한다. `postinstall`이 Prisma 클라이언트를 만든다.
    ```bash
    npm install
    ```
-2. `.env-example`을 `.env`로 복사하고 값을 채운다. 각 변수의 용도는 `.env-example`의 주석에 있다.
-3. 개발 서버를 띄운다. http://localhost:7777 에서 열린다.
+3. `.env-example`을 `.env`로 복사하고 값을 채운다. 각 변수의 용도는 `.env-example`의 주석에 있다.
+4. 개발 서버를 띄운다. http://localhost:7777 에서 열린다.
    ```bash
    npm run dev
    ```
