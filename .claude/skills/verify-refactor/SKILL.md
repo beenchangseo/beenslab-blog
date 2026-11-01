@@ -21,9 +21,10 @@ description: 동작을 바꾸지 않아야 하는 변경(파일 이동, 이름 �
 1. 바꾸기 전 커밋에서 빌드하고 기록한다.
    ```bash
    npm run build
-   npx next start -p 7801 &
+   NODE_ENV=production npx next start -p 7801 &
    npm run snapshot -- http://localhost:7801 /tmp/snap-before
    ```
+   `NODE_ENV=production`을 빼지 않는다. `next start`는 셸에 이미 있는 `NODE_ENV`를 그대로 쓴다. 이 값이 `production`이 아니면 Prisma가 에러 메시지에 호출 위치의 압축된 서버 코드 한 줄을 붙인다. 그 줄은 번들이 바뀌면 함께 바뀌므로, 동작이 같은 리팩터링이어도 전후 빌드의 `editors.json` 삭제 프로브 기록이 달라진다. 같은 빌드를 두 번 기록하는 4단계로는 이 차이가 드러나지 않는다.
 2. 서버를 끄고, 변경을 적용한 뒤 같은 방식으로 `/tmp/snap-after`에 기록한다.
 3. `diff -r /tmp/snap-before /tmp/snap-after`를 본다. 리팩터링이라면 비어 있어야 한다. 차이가 있으면 의도한 변경인지 하나씩 확인하고 커밋 메시지에 적는다.
 4. 처음 한 번은 같은 빌드를 두 번 기록해서 diff가 비는지 본다. 기준선이 흔들리면 비교 결과를 믿을 수 없다.
