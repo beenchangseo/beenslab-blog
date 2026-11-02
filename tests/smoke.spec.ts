@@ -4,7 +4,7 @@ import {adminSessionCookie} from './support/session';
 // Fetched without a browser: a browser on a post page loads the view-counter image,
 // which adds a view to the production Redis count.
 const PUBLIC_PAGES = [
-    {path: '/', contains: '최신 글'},
+    {path: '/', contains: '전체 글'},
     {path: '/blog', contains: '<h1'},
     {path: '/blog/page/2', contains: '2페이지'},
     {path: '/category', contains: '카테고리'},
