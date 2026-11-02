@@ -3,163 +3,150 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {getAllPosts, getCategories} from '@/lib/posts';
 import Container from '@/components/layout/Container';
-import PostGrid from '@/components/blog/PostGrid';
-import {getPostThumbnail} from '@/lib/postImage';
-import {postPath} from '@/lib/paths';
+import {categoryPath, postPath} from '@/lib/paths';
+import {formatPostDate} from '@/lib/date';
+import {Category, PostSummary} from '@/types/blog';
 
 export const revalidate = 3600;
 
+const MOTTO = '데이터를 안전하고 정확하게 전달하는 백엔드 개발자가 되자!';
+
 export const metadata = pageMetadata({
     title: 'ChangBeen Seo - 백엔드 개발자',
-    description:
-        '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다. 기술과 경험을 나누는 개발자 서창빈의 블로그입니다.',
-    shareDescription: '더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다.',
+    description: `${MOTTO} 백엔드 엔지니어 서창빈의 기술 블로그입니다.`,
+    shareDescription: MOTTO,
     path: '/',
     keywords: ['백엔드 개발자', 'Node.js', 'TypeScript', 'AWS', 'DevOps', '서창빈', 'beenchangseo'],
     imageAlt: 'ChangBeen Seo Blog',
 });
 
+const RECENT_COUNT = 6;
+
 export default async function Home() {
     const [posts, categories] = await Promise.all([getAllPosts(), getCategories()]);
 
-    const latest = posts.slice(0, 6);
-    const popular = [...posts].sort((a, b) => b.view_count - a.view_count).slice(0, 3);
-
-    const seriesMap = new Map<string, {title: string; posts: typeof posts}>();
-    for (const post of posts) {
-        if (!post.series) continue;
-        const entry = seriesMap.get(post.series.slug) ?? {title: post.series.title, posts: []};
-        entry.posts.push(post);
-        seriesMap.set(post.series.slug, entry);
-    }
-    const seriesList = [...seriesMap.values()].map((s) => ({
-        ...s,
-        posts: [...s.posts].sort((a, b) => (a.series?.order ?? 0) - (b.series?.order ?? 0)),
-    }));
+    const [featured, ...rest] = posts;
+    const recent = rest.slice(0, RECENT_COUNT);
+    const categoryCounts = categories
+        .map((category) => ({
+            ...category,
+            count: posts.filter((post) => post.categories.includes(category.keyword)).length,
+        }))
+        .filter((category) => category.count > 0);
 
     return (
-        <>
-            <Container className="py-14 sm:py-20">
-                <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-8 sm:text-left">
-                    <Image
-                        src="/images/profile.jpeg"
-                        alt="서창빈 프로필 사진"
-                        width={96}
-                        height={96}
-                        priority
-                        className="size-24 shrink-0 rounded-full object-cover shadow-md"
-                    />
-                    <div>
-                        <h1 className="text-3xl font-bold sm:text-4xl">ChangBeen Seo</h1>
-                        <p className="mt-2 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
-                            더 나은 아키텍처와 효율적인 솔루션으로 세상을 편리하게 만듭니다. 실제
-                            운영에서 겪은 성능 문제와 장애 대응을 기록합니다.
-                        </p>
-                    </div>
+        <Container className="break-keep">
+            <section className="flex items-center gap-5 border-b border-line pt-14 pb-12 sm:gap-6 sm:pt-16">
+                <Image
+                    src="/images/profile.jpeg"
+                    alt="서창빈 프로필 사진"
+                    width={72}
+                    height={72}
+                    priority
+                    className="size-16 shrink-0 rounded-full object-cover sm:size-18"
+                />
+                <div>
+                    <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">서창빈</h1>
+                    <p className="mt-1 text-ink-muted sm:text-lg">{MOTTO}</p>
                 </div>
-            </Container>
+            </section>
 
-            <Container className="pb-16">
-                <SectionHeading title="최신 글" href="/blog" linkLabel="전체 보기" />
-                <PostGrid posts={latest} categories={categories} />
-            </Container>
+            {featured && (
+                <section className="grid gap-12 border-b border-line py-12 lg:grid-cols-[1fr_20rem] lg:gap-16">
+                    <article>
+                        <Kicker post={featured} categories={categories} />
+                        <h2 className="mt-3 text-3xl leading-tight font-extrabold tracking-tight sm:text-4xl">
+                            <Link href={postPath(featured.slug)} className="hover:text-brand-600">
+                                {featured.title}
+                            </Link>
+                        </h2>
+                        <p className="mt-4 text-lg leading-relaxed text-ink-muted">
+                            {featured.description}
+                        </p>
+                        <Link
+                            href={postPath(featured.slug)}
+                            className="mt-5 inline-block text-sm font-semibold text-brand-600 hover:underline"
+                        >
+                            글 읽기 →
+                        </Link>
+                    </article>
 
-            {popular.some((post) => post.view_count > 0) && (
-                <section className="bg-surface-subtle py-16">
-                    <Container>
-                        <SectionHeading title="많이 본 글" />
-                        <ol className="flex flex-col gap-1">
-                            {popular.map((post, index) => (
-                                <li key={post.id}>
+                    <aside>
+                        <h2 className="text-sm font-bold">카테고리</h2>
+                        <ul className="mt-2">
+                            {categoryCounts.map((category) => (
+                                <li key={category.id}>
                                     <Link
-                                        href={postPath(post.slug)}
-                                        className="flex items-baseline gap-4 rounded-lg px-3 py-4 transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
+                                        href={categoryPath(category.keyword)}
+                                        className="flex justify-between border-b border-line py-3 hover:text-brand-600"
                                     >
-                                        <span className="text-xl font-bold tabular-nums text-brand-500">
-                                            {index + 1}
-                                        </span>
-                                        <span className="flex-1">
-                                            <span className="block font-semibold">
-                                                {post.title}
-                                            </span>
-                                            <span className="mt-1 line-clamp-1 block text-sm text-ink-muted">
-                                                {post.description}
-                                            </span>
+                                        {category.title}
+                                        <span className="text-ink-muted tabular-nums">
+                                            {category.count}
                                         </span>
                                     </Link>
                                 </li>
                             ))}
-                        </ol>
-                    </Container>
+                        </ul>
+                    </aside>
                 </section>
             )}
 
-            {seriesList.length > 0 && (
-                <Container className="py-16">
-                    <SectionHeading title="시리즈" />
-                    <div className="flex flex-col gap-8">
-                        {seriesList.map((series) => (
-                            <div
-                                key={series.title}
-                                className="rounded-2xl border border-line p-6 sm:p-8"
-                            >
-                                <h3 className="text-xl font-bold">{series.title}</h3>
-                                <ol className="mt-5 grid gap-5 sm:grid-cols-2">
-                                    {series.posts.map((post) => (
-                                        <li key={post.id} className="flex gap-4">
-                                            <Link
-                                                href={postPath(post.slug)}
-                                                className="shrink-0 overflow-hidden rounded-lg border border-line focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
-                                            >
-                                                <Image
-                                                    src={getPostThumbnail(post)}
-                                                    alt=""
-                                                    width={1200}
-                                                    height={630}
-                                                    sizes="128px"
-                                                    className="aspect-[1200/630] w-32 object-cover"
-                                                />
-                                            </Link>
-                                            <div className="min-w-0">
-                                                <p className="text-xs text-ink-muted">
-                                                    {post.series?.order}편
-                                                </p>
-                                                <Link
-                                                    href={postPath(post.slug)}
-                                                    className="mt-1 line-clamp-2 block font-semibold hover:text-brand-600"
-                                                >
-                                                    {post.title}
-                                                </Link>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ol>
-                            </div>
-                        ))}
-                    </div>
-                </Container>
-            )}
-        </>
+            <section className="grid sm:grid-cols-2">
+                {recent.map((post) => (
+                    <article
+                        key={post.id}
+                        className="border-b border-dashed border-line py-8 sm:odd:pr-10 sm:even:border-l sm:even:pl-10"
+                    >
+                        <Kicker post={post} categories={categories} />
+                        <h3 className="mt-2 text-xl leading-snug font-bold tracking-tight">
+                            <Link href={postPath(post.slug)} className="hover:text-brand-600">
+                                {post.title}
+                            </Link>
+                        </h3>
+                        <p className="mt-2 line-clamp-2 leading-relaxed text-ink-muted">
+                            {post.description}
+                        </p>
+                    </article>
+                ))}
+            </section>
+
+            <div className="pt-10 pb-16">
+                <Link href="/blog" className="text-sm font-semibold text-brand-600 hover:underline">
+                    전체 글 {posts.length}편 보기 →
+                </Link>
+            </div>
+        </Container>
     );
 }
 
-function SectionHeading({
-    title,
-    href,
-    linkLabel,
-}: {
-    title: string;
-    href?: string;
-    linkLabel?: string;
-}) {
+function Kicker({post, categories}: {post: PostSummary; categories: Category[]}) {
+    const category = categories.find((c) => c.keyword === post.categories[0]);
+    const publishedAt = post.published_at ?? post.create_time;
+
     return (
-        <div className="mb-8 flex items-baseline justify-between">
-            <h2 className="text-2xl font-bold">{title}</h2>
-            {href && linkLabel && (
-                <Link href={href} className="text-sm font-semibold text-brand-600 hover:underline">
-                    {linkLabel} →
-                </Link>
+        <p className="text-sm text-ink-muted">
+            {category && (
+                <>
+                    <Link
+                        href={categoryPath(category.keyword)}
+                        className="font-semibold text-brand-600 hover:underline"
+                    >
+                        {category.title}
+                    </Link>
+                    {' · '}
+                </>
             )}
-        </div>
+            <time dateTime={publishedAt} className="tabular-nums">
+                {formatPostDate(publishedAt)}
+            </time>
+            {post.series && (
+                <>
+                    {' · '}
+                    {post.series.title}
+                    {post.series.order != null && ` ${post.series.order}편`}
+                </>
+            )}
+        </p>
     );
 }
