@@ -21,6 +21,7 @@ export default function Nav({type, categories, onClick}: NavProps) {
             href: categoryPath(category.keyword),
             active: pathname === categoryPath(category.keyword),
         })),
+        {label: 'About', href: '/about', active: pathname === '/about'},
         {label: 'Career', href: '/career', active: pathname === '/career'},
     ];
 

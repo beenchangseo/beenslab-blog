@@ -10,6 +10,7 @@ const PUBLIC_PAGES = [
     {path: '/category', contains: '카테고리'},
     {path: '/category/backend', contains: 'Backend'},
     {path: '/search?q=redis', contains: '검색'},
+    {path: '/about', contains: '소개 - 서창빈'},
     {path: '/career', contains: '이력서 - 서창빈'},
     {path: '/rss.xml', contains: '<rss'},
     {path: '/sitemap.xml', contains: '<urlset'},

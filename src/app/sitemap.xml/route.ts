@@ -69,8 +69,14 @@ export async function GET() {
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>${SITE_URL}/about</loc>
+    <lastmod>2026-11-02T00:00:00.000Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>${SITE_URL}/career</loc>
-    <lastmod>2024-01-01T00:00:00.000Z</lastmod>
+    <lastmod>2026-11-02T00:00:00.000Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
