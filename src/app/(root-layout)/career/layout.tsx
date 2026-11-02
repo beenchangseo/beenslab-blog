@@ -3,15 +3,16 @@ import {pageMetadata} from '@/lib/metadata';
 export const metadata = pageMetadata({
     title: '이력서 - 서창빈',
     description:
-        'Node.js 백엔드 엔지니어 서창빈의 이력서와 포트폴리오. 암호화폐 거래소 백엔드 개발, SRE, AWS 최적화 경험.',
-    shareTitle: '이력서 - 서창빈 (Node.js 백엔드 엔지니어)',
+        '백엔드 엔지니어 서창빈의 이력서와 포트폴리오. AI B2B SaaS 백엔드 PL, 가상자산 거래소 백엔드와 SRE, 교통 관제 시스템.',
+    shareTitle: '이력서 - 서창빈 (백엔드 엔지니어)',
     shareDescription:
-        '암호화폐 거래소 백엔드 개발 및 SRE. 24,000배 쿼리 성능 개선, 연간 $82,000 비용 절감 경험.',
+        'AI B2B SaaS 백엔드 PL. 가상자산 거래소에서 쿼리 958ms → 0.042ms, 연간 $80,000 이상 비용 절감.',
     path: '/career',
     keywords: [
         '서창빈',
         'beenchangseo',
         '백엔드 엔지니어',
+        '백엔드 PL',
         'Node.js 개발자',
         'SRE',
         'AWS',

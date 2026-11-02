@@ -49,14 +49,6 @@ export default function Header({
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                Phone
-                            </span>
-                            <span className="text-sm text-gray-900 dark:text-white">
-                                {SUMMARY.contact.phone}
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                 Location
                             </span>
                             <span className="text-sm text-gray-900 dark:text-white">
@@ -76,7 +68,7 @@ export default function Header({
                                 {SUMMARY.contact.github.replace('https://', '')}
                             </a>
                         </div>
-                        <div className="flex flex-col gap-1 sm:col-span-2">
+                        <div className="flex flex-col gap-1">
                             <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                 Blog
                             </span>
